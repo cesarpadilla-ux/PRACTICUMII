@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Monitor AD7606 en Vivo</title>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h2>📡 Señales AD7606 en tiempo real</h2>
+  <canvas id="chart" width="800" height="400"></canvas>
+
+  <script>
+    // CONFIGURA TU FIREBASE:
+    const firebaseConfig = {
+      databaseURL: "https://ad7606-monitor-default-rtdb.firebaseio.com/"
+    };
+
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const ctx = document.getElementById('chart').getContext('2d');
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [
+          { label: 'Canal 1', data: [], borderWidth: 1, borderColor: 'red' },
+          { label: 'Canal 2', data: [], borderWidth: 1, borderColor: 'blue' },
+          { label: 'Canal 3', data: [], borderWidth: 1, borderColor: 'green' },
+          { label: 'Canal 4', data: [], borderWidth: 1, borderColor: 'orange' },
+          { label: 'Canal 5', data: [], borderWidth: 1, borderColor: 'purple' }
+        ]
+      },
+      options: { animation: false, scales: { y: { min: -10, max: 10 } } }
+    });
+
+    db.ref("datos").limitToLast(50).on("child_added", snapshot => {
+      const d = snapshot.val();
+      const t = new Date(d.timestamp * 1000).toLocaleTimeString();
+      chart.data.labels.push(t);
+      chart.data.datasets[0].data.push(d.ch1);
+      chart.data.datasets[1].data.push(d.ch2);
+      chart.data.datasets[2].data.push(d.ch3);
+      chart.data.datasets[3].data.push(d.ch4);
+      chart.data.datasets[4].data.push(d.ch5);
+
+      if (chart.data.labels.length > 50) {
+        chart.data.labels.shift();
+        chart.data.datasets.forEach(ds => ds.data.shift());
+      }
+      chart.update();
+    });
+  </script>
+</body>
+</html>
