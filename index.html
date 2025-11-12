@@ -1,98 +1,95 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Señales en tiempo real - Practicum II</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lecturas AD7606 en Tiempo Real</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f9fafb;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+      background: #f9f9f9;
       margin: 0;
-    }
-    .card {
-      background: white;
-      border-radius: 16px;
       padding: 20px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-      width: 90%;
-      max-width: 800px;
+      text-align: center;
     }
     canvas {
-      width: 100%;
-      height: 400px;
+      max-width: 900px;
+      margin-top: 30px;
+    }
+    h1 {
+      color: #333;
     }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h2 style="text-align:center;">📈 Señal en tiempo real (Firebase)</h2>
-    <canvas id="signalChart"></canvas>
-  </div>
+  <h1>Señal del AD7606 en Tiempo Real</h1>
+  <canvas id="chart"></canvas>
 
   <script type="module">
-    // Configuración de Firebase
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+    // ==========================
+    // 🔥 CONFIGURA TU FIREBASE
+    // ==========================
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getDatabase, ref, onChildAdded } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
     const firebaseConfig = {
-      databaseURL: "https://practicumii-a9956-default-rtdb.firebaseio.com/"
+      apiKey: "TU_API_KEY",
+      authDomain: "tu-proyecto.firebaseapp.com",
+      databaseURL: "https://tu-proyecto.firebaseio.com",
+      projectId: "tu-proyecto",
+      storageBucket: "tu-proyecto.appspot.com",
+      messagingSenderId: "1234567890",
+      appId: "1:1234567890:web:abcdef123456"
     };
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const refData = ref(db, "signal");
+    const dataRef = ref(db, "ecg_data");
 
-    // Configurar el gráfico
-    const ctx = document.getElementById("signalChart").getContext("2d");
-    const dataBuffer = [];
-    const maxPoints = 200;
-
+    // ==========================
+    // 📈 CONFIGURAR GRÁFICA
+    // ==========================
+    const ctx = document.getElementById("chart").getContext("2d");
     const chart = new Chart(ctx, {
       type: "line",
       data: {
-        labels: Array(maxPoints).fill(""),
+        labels: [],
         datasets: [{
-          label: "Voltaje (V)",
-          data: Array(maxPoints).fill(0),
-          borderColor: "rgba(54, 162, 235, 1)",
-          borderWidth: 2,
-          tension: 0.3,
-          pointRadius: 0
+          label: "Canal 1 (V)",
+          data: [],
+          borderColor: "blue",
+          borderWidth: 1,
+          pointRadius: 0,
+          fill: false,
+          tension: 0
         }]
       },
       options: {
-        responsive: true,
         animation: false,
         scales: {
-          y: { beginAtZero: true }
+          y: { beginAtZero: true, min: -10, max: 10 }
         }
       }
     });
 
-    // 🔹 Control de actualización fluida
-    let lastUpdate = 0;
-    const updateInterval = 100; // ms
+    // ==========================
+    // 📡 ESCUCHAR NUEVOS DATOS
+    // ==========================
+    onChildAdded(dataRef, (snapshot) => {
+      const data = snapshot.val();
+      const voltages = data.values;
+      if (voltages && voltages.length > 0) {
+        chart.data.labels.push("");
+        chart.data.datasets[0].data.push(voltages[0]); // Canal 1
 
-    onValue(refData, (snapshot) => {
-      const val = snapshot.val();
-      if (!val) return;
-
-      const now = Date.now();
-      if (now - lastUpdate > updateInterval) {
-        dataBuffer.push(val);
-        if (dataBuffer.length > maxPoints) dataBuffer.shift();
-
-        chart.data.datasets[0].data = dataBuffer;
-        chart.update("none"); // sin animación brusca
-        lastUpdate = now;
+        if (chart.data.labels.length > 200) { // limitar muestras
+          chart.data.labels.shift();
+          chart.data.datasets[0].data.shift();
+        }
+        chart.update();
       }
     });
   </script>
