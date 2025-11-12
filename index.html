@@ -2,111 +2,99 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Monitoreo en Vivo - AD7606</title>
-
-  <!-- Librerías -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Señales en tiempo real - Practicum II</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <!-- Estilos -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f3f4f6;
-      color: #222;
-      text-align: center;
+      background: #f9fafb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
       margin: 0;
-      padding: 20px;
     }
-    h1 {
-      margin-top: 10px;
-      font-size: 24px;
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      width: 90%;
+      max-width: 800px;
     }
     canvas {
-      max-width: 900px;
       width: 100%;
-      margin: 30px auto;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
-      display: block;
+      height: 400px;
     }
   </style>
 </head>
 <body>
-  <h1>📡 Señales en vivo desde la Raspberry Pi (Canales 1–5)</h1>
-  <canvas id="grafica"></canvas>
+  <div class="card">
+    <h2 style="text-align:center;">📈 Señal en tiempo real (Firebase)</h2>
+    <canvas id="signalChart"></canvas>
+  </div>
 
-  <script>
-    // ---------------------------------------------------
-    // 🔹 CONFIGURACIÓN FIREBASE
-    // ---------------------------------------------------
+  <script type="module">
+    // Configuración de Firebase
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+
     const firebaseConfig = {
       databaseURL: "https://practicumii-a9956-default-rtdb.firebaseio.com/"
     };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
 
-    // ---------------------------------------------------
-    // 🔹 CONFIGURACIÓN DE LA GRÁFICA
-    // ---------------------------------------------------
-    const ctx = document.getElementById("grafica").getContext("2d");
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const refData = ref(db, "signal");
+
+    // Configurar el gráfico
+    const ctx = document.getElementById("signalChart").getContext("2d");
+    const dataBuffer = [];
+    const maxPoints = 200;
+
     const chart = new Chart(ctx, {
       type: "line",
       data: {
-        labels: Array(50).fill(""),
-        datasets: [
-          { label: "Canal 1", borderColor: "red", data: Array(50).fill(0), tension: 0.3 },
-          { label: "Canal 2", borderColor: "blue", data: Array(50).fill(0), tension: 0.3 },
-          { label: "Canal 3", borderColor: "green", data: Array(50).fill(0), tension: 0.3 },
-          { label: "Canal 4", borderColor: "orange", data: Array(50).fill(0), tension: 0.3 },
-          { label: "Canal 5", borderColor: "purple", data: Array(50).fill(0), tension: 0.3 }
-        ]
+        labels: Array(maxPoints).fill(""),
+        datasets: [{
+          label: "Voltaje (V)",
+          data: Array(maxPoints).fill(0),
+          borderColor: "rgba(54, 162, 235, 1)",
+          borderWidth: 2,
+          tension: 0.3,
+          pointRadius: 0
+        }]
       },
       options: {
-        animation: false,
         responsive: true,
-        elements: { point: { radius: 0 } },
+        animation: false,
         scales: {
-          y: {
-            min: -10,
-            max: 10,
-            title: { display: true, text: "Voltaje (V)" }
-          },
-          x: { display: false }
-        },
-        plugins: {
-          legend: { position: "bottom" }
+          y: { beginAtZero: true }
         }
       }
     });
 
-    // ---------------------------------------------------
-    // 🔹 FLUJO DE DATOS SUAVIZADO
-    // ---------------------------------------------------
-    let buffer = [];
+    // 🔹 Control de actualización fluida
+    let lastUpdate = 0;
+    const updateInterval = 100; // ms
 
-    // Escucha datos nuevos en Firebase
-    db.ref("datos").limitToLast(100).on("child_added", snapshot => {
-      const d = snapshot.val();
-      if (d && d.canales) buffer.push(d.canales);
-    });
+    onValue(refData, (snapshot) => {
+      const val = snapshot.val();
+      if (!val) return;
 
-    // Actualiza la gráfica cada 100 ms con el valor más reciente
-    setInterval(() => {
-      if (buffer.length === 0) return;
-      const latest = buffer[buffer.length - 1];
-      buffer = [];
+      const now = Date.now();
+      if (now - lastUpdate > updateInterval) {
+        dataBuffer.push(val);
+        if (dataBuffer.length > maxPoints) dataBuffer.shift();
 
-      for (let i = 0; i < 5; i++) {
-        chart.data.datasets[i].data.push(latest[i]);
-        if (chart.data.datasets[i].data.length > 50) chart.data.datasets[i].data.shift();
+        chart.data.datasets[0].data = dataBuffer;
+        chart.update("none"); // sin animación brusca
+        lastUpdate = now;
       }
-
-      chart.update("none"); // actualización sin animación
-    }, 100); // cada 100 ms (~10 FPS)
+    });
   </script>
 </body>
 </html>
