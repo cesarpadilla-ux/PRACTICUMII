@@ -1,14 +1,20 @@
+// URL de tu base de datos Firebase
 const firebaseURL = "https://practicumii-a9956-default-rtdb.firebaseio.com/datos.json";
 
 async function obtenerDatos() {
   try {
+    // Solo pedimos el último paquete
     const response = await fetch(firebaseURL + "?orderBy=\"timestamp\"&limitToLast=1");
     const data = await response.json();
 
     if (!data) return;
 
-    const ultimo = Object.values(data)[0];  // extrae último registro
-    const voltajes = ultimo.canales || ultimo.datos?.at(-1) || [];
+    // Tomar el último nodo
+    const ultimo = Object.values(data)[0];
+    if (!ultimo || !ultimo.datos) return;
+
+    // Tomar el último grupo de voltajes
+    const voltajes = ultimo.datos[ultimo.datos.length - 1];
 
     const lista = document.getElementById("lista");
     lista.innerHTML = "";
@@ -19,9 +25,10 @@ async function obtenerDatos() {
       lista.appendChild(item);
     });
   } catch (error) {
-    console.error("Error al obtener datos:", error);
+    console.error("⚠️ Error al obtener datos:", error);
   }
 }
 
-setInterval(obtenerDatos, 200); // cada 200 ms (5 Hz)
+// Actualiza la lista cada 200 ms (5 Hz)
+setInterval(obtenerDatos, 200);
 obtenerDatos();
