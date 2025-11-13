@@ -1,18 +1,19 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Monitoreo AD7606</title>
-  <link rel="stylesheet" href="pagina.css">
+  <link rel="stylesheet" href="pagina.css" />
 </head>
 <body>
   <div class="container">
     <h1>📡 Monitoreo de Señales AD7606</h1>
-    <p>Lectura en tiempo real desde la Raspberry Pi</p>
+    <p>Lectura con retraso ≈ 1 s (paquetes agrupados)</p>
 
     <div id="valores" class="card">
-      <h2>Última medición</h2>
+      <h2>Último paquete recibido</h2>
+      <div id="meta"></div>
       <ul id="lista"></ul>
     </div>
   </div>

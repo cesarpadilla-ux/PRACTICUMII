@@ -3,32 +3,38 @@ body {
   font-family: Arial, sans-serif;
   text-align: center;
   color: #333;
+  margin: 0;
+  padding: 20px;
 }
-
 .container {
-  max-width: 600px;
-  margin: 50px auto;
+  max-width: 760px;
+  margin: 30px auto;
   background: white;
   padding: 20px;
   border-radius: 16px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
-
 .card {
   background: #e8f0fe;
   padding: 15px;
   border-radius: 12px;
 }
-
 ul {
   list-style: none;
   padding: 0;
+  margin: 8px 0 0 0;
+  text-align: left;
 }
-
 li {
   background: #fff;
   margin: 6px 0;
   padding: 8px;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+  font-family: monospace;
+}
+#meta {
+  font-size: 0.9rem;
+  color: #222;
+  margin-bottom: 8px;
 }
