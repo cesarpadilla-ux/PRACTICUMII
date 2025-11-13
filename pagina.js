@@ -9,23 +9,22 @@ async function obtenerDatos() {
     const lista = document.getElementById("lista");
     lista.innerHTML = "";
 
-    // Cada clave es un paquete enviado
     const paquetes = Object.values(data);
-    const ultimo = paquetes[paquetes.length - 1];
+    const ultimoPaquete = paquetes[paquetes.length - 1];
+    if (!Array.isArray(ultimoPaquete)) return;
 
-    if (Array.isArray(ultimo)) {
-      const ultimaMuestra = ultimo[ultimo.length - 1];
-      ultimaMuestra.canales.forEach((v, i) => {
-        const item = document.createElement("li");
-        item.textContent = `Canal ${i + 1}: ${v.toFixed(4)} V`;
-        lista.appendChild(item);
-      });
-    }
+    const ultimaMuestra = ultimoPaquete[ultimoPaquete.length - 1];
+    if (!ultimaMuestra?.canales) return;
+
+    ultimaMuestra.canales.forEach((v, i) => {
+      const li = document.createElement("li");
+      li.textContent = `Canal ${i + 1}: ${v.toFixed(4)} V`;
+      lista.appendChild(li);
+    });
   } catch (error) {
     console.error("Error al obtener datos:", error);
   }
 }
 
-// Actualiza cada 2 segundos
 setInterval(obtenerDatos, 2000);
 obtenerDatos();
