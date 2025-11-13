@@ -1,112 +1,107 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Monitoreo en Vivo - AD7606</title>
+    <meta charset="UTF-8">
+    <title>Visualización AD7606 – Tiempo Real</title>
 
-  <!-- Librerías -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Librería Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
-  <!-- Estilos -->
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f3f4f6;
-      color: #222;
-      text-align: center;
-      margin: 0;
-      padding: 20px;
-    }
-    h1 {
-      margin-top: 10px;
-      font-size: 24px;
-    }
-    canvas {
-      max-width: 900px;
-      width: 100%;
-      margin: 30px auto;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
-      display: block;
-    }
-  </style>
-</head>
-<body>
-  <h1>📡 Señales en vivo desde la Raspberry Pi (Canales 1–5)</h1>
-  <canvas id="grafica"></canvas>
+    <!-- Chart.js para graficación -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <script>
-    // ---------------------------------------------------
-    // 🔹 CONFIGURACIÓN FIREBASE
-    // ---------------------------------------------------
-    const firebaseConfig = {
-      databaseURL: "https://practicumii-a9956-default-rtdb.firebaseio.com/"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    // ---------------------------------------------------
-    // 🔹 CONFIGURACIÓN DE LA GRÁFICA
-    // ---------------------------------------------------
-    const ctx = document.getElementById("grafica").getContext("2d");
-    const chart = new Chart(ctx, {
-      type: "line",
-      data: {
-        labels: Array(50).fill(""),
-        datasets: [
-          { label: "Canal 1", borderColor: "red", data: Array(50).fill(0), tension: 0.3 },
-          { label: "Canal 2", borderColor: "blue", data: Array(50).fill(0), tension: 0.3 },
-          { label: "Canal 3", borderColor: "green", data: Array(50).fill(0), tension: 0.3 },
-          { label: "Canal 4", borderColor: "orange", data: Array(50).fill(0), tension: 0.3 },
-          { label: "Canal 5", borderColor: "purple", data: Array(50).fill(0), tension: 0.3 }
-        ]
-      },
-      options: {
-        animation: false,
-        responsive: true,
-        elements: { point: { radius: 0 } },
-        scales: {
-          y: {
-            min: -10,
-            max: 10,
-            title: { display: true, text: "Voltaje (V)" }
-          },
-          x: { display: false }
-        },
-        plugins: {
-          legend: { position: "bottom" }
+    <style>
+        body {
+            font-family: Arial;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 20px;
         }
-      }
-    });
+        h1 {
+            text-align: center;
+        }
+        canvas {
+            background: white;
+            border-radius: 10px;
+            padding: 10px;
+        }
+    </style>
+</head>
 
-    // ---------------------------------------------------
-    // 🔹 FLUJO DE DATOS SUAVIZADO
-    // ---------------------------------------------------
-    let buffer = [];
+<body>
 
-    // Escucha datos nuevos en Firebase
-    db.ref("datos").limitToLast(100).on("child_added", snapshot => {
-      const d = snapshot.val();
-      if (d && d.canales) buffer.push(d.canales);
-    });
+<h1>Visualización en Tiempo Real – AD7606</h1>
 
-    // Actualiza la gráfica cada 100 ms con el valor más reciente
-    setInterval(() => {
-      if (buffer.length === 0) return;
-      const latest = buffer[buffer.length - 1];
-      buffer = [];
+<canvas id="chart" height="120"></canvas>
 
-      for (let i = 0; i < 5; i++) {
-        chart.data.datasets[i].data.push(latest[i]);
-        if (chart.data.datasets[i].data.length > 50) chart.data.datasets[i].data.shift();
-      }
+<script>
+/* ============================================================
+   CONFIGURACIÓN FIREBASE
+   ============================================================ */
+const firebaseConfig = {
+    databaseURL: "https://practicumii-a9956-default-rtdb.firebaseio.com/"
+};
 
-      chart.update("none"); // actualización sin animación
-    }, 100); // cada 100 ms (~10 FPS)
-  </script>
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+/* ============================================================
+   CONFIGURACIÓN DE LA GRÁFICA
+   ============================================================ */
+const MAX_POINTS = 500; // ~10 s si muestreas a 50 Hz
+
+const ctx = document.getElementById("chart").getContext("2d");
+const chart = new Chart(ctx, {
+    type: "line",
+    data: {
+        labels: [],
+        datasets: [
+            { label: "Canal 1", data: [], borderWidth: 1 },
+            { label: "Canal 2", data: [], borderWidth: 1 },
+            { label: "Canal 3", data: [], borderWidth: 1 },
+            { label: "Canal 4", data: [], borderWidth: 1 },
+            { label: "Canal 5", data: [], borderWidth: 1 }
+        ]
+    },
+    options: {
+        responsive: true,
+        animation: false,
+        scales: {
+            x: { display: false },
+            y: { min: -10, max: 10 }
+        }
+    }
+});
+
+/* ============================================================
+   LECTURA DE DATOS DESDE FIREBASE
+   ============================================================ */
+db.ref("ad7606/data").on("value", snapshot => {
+    const value = snapshot.val();
+
+    if (!value) return;
+
+    const voltajes = value.split(",").map(Number); // CSV → lista
+
+    const now = new Date().toLocaleTimeString();
+
+    chart.data.labels.push(now);
+
+    // Agregar 5 canales (si tu Raspberry envía 8, puedo ajustar)
+    for (let i = 0; i < 5; i++) {
+        chart.data.datasets[i].data.push(voltajes[i] || 0);
+    }
+
+    // Mantener tamaño
+    if (chart.data.labels.length > MAX_POINTS) {
+        chart.data.labels.shift();
+        chart.data.datasets.forEach(d => d.data.shift());
+    }
+
+    chart.update();
+});
+</script>
+
 </body>
 </html>
