@@ -1,22 +1,55 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Monitoreo AD7606</title>
-  <link rel="stylesheet" href="pagina.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monitoreo AD7606 en tiempo real</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body { font-family: Arial; background: #f5f6f8; margin: 0; padding: 20px; }
+h2 { text-align: center; }
+canvas { background: white; border-radius: 8px; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
+</style>
 </head>
 <body>
-  <div class="container">
-    <h1> Monitoreo de Señales AD7606</h1>
-    <p>Lecturas enviadas desde Raspberry Pi</p>
+<h2>Monitoreo de Señales AD7606</h2>
+<canvas id="grafica" width="800" height="400"></canvas>
 
-    <div id="valores" class="card">
-      <h2>Últimas mediciones</h2>
-      <ul id="lista"></ul>
-    </div>
-  </div>
+<script>
+const ctx = document.getElementById('grafica').getContext('2d');
+const chart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: [],
+    datasets: Array.from({ length: 8 }, (_, i) => ({
+      label: 'Canal ' + (i+1),
+      data: [],
+      borderWidth: 1,
+      fill: false
+    }))
+  },
+  options: {
+    scales: { y: { beginAtZero: true, min: -10, max: 10 } }
+  }
+});
 
-  <script src="pagina.js"></script>
+async function obtenerDatos() {
+  const url = "https://practicumii-a9956-default-rtdb.firebaseio.com/datos.json";
+  const res = await fetch(url);
+  const data = await res.json();
+  if (!data) return;
+  
+  const registros = Object.values(data).flat();
+  const ultimos = registros.slice(-20);
+
+  chart.data.labels = ultimos.map(d => new Date(d.t * 1000).toLocaleTimeString());
+  for (let i = 0; i < 8; i++) {
+    chart.data.datasets[i].data = ultimos.map(d => d.v[i]);
+  }
+  chart.update();
+}
+
+setInterval(obtenerDatos, 2000);
+</script>
 </body>
 </html>
