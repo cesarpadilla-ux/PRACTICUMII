@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title> Últimas 1400 Lecturas</title>
+<title>AD7606 - Últimas 1400 muestras</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
   body { font-family: Arial, sans-serif; margin: 20px; }
@@ -38,21 +38,22 @@ async function createCharts() {
     const data = await fetchData();
     
     CHANNELS.forEach((ch, i) => {
-        // Rellenar con null al inicio si hay menos de 1400 muestras
+        // Rellenar con null si hay menos de 1400 muestras
         let paddedData = Array(BUFFER_SIZE - data[ch].length).fill(null).concat(data[ch]);
-        let labels = Array(BUFFER_SIZE).fill(null).map((_, idx) => idx);
+        
+        // Convertir a formato {x: idx, y: value} para escala lineal
+        let chartData = paddedData.map((v, idx) => ({x: idx, y: v}));
 
         const ctx = document.getElementById(`ch${i+1}`).getContext('2d');
         new Chart(ctx, {
             type: 'line',
             data: {
-                labels: labels,
                 datasets: [{
                     label: ch,
-                    data: paddedData,
+                    data: chartData,
                     borderColor: COLORS[i],
                     fill: false,
-                    tension: 0.2
+                    tension: 0.2,
                 }]
             },
             options: {
@@ -60,14 +61,15 @@ async function createCharts() {
                 animation: false,
                 scales: {
                     x: {
+                        type: 'linear', // Escala lineal para que min/max funcione
                         title: { display: true, text: 'Muestras' },
-                        min:0
-                        max: 1400
-                        ticks: { maxTicksLimit: 10 } // Menos marcas para que no se amontonen
+                        min: 0,
+                        max: BUFFER_SIZE,
+                        ticks: { maxTicksLimit: 10 }
                     },
                     y: {
                         title: { display: true, text: 'Voltaje (V)' },
-                        min: -10,  // Escala fija
+                        min: -10,
                         max: 10
                     }
                 }
