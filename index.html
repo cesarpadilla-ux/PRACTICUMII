@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>AD7606 - Últimas 3000 muestras</title>
+<title> Últimas 1400 Lecturas</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
   body { font-family: Arial, sans-serif; margin: 20px; }
@@ -38,7 +38,7 @@ async function createCharts() {
     const data = await fetchData();
     
     CHANNELS.forEach((ch, i) => {
-        // Rellenar con null al inicio si hay menos de 3000 muestras
+        // Rellenar con null al inicio si hay menos de 1400 muestras
         let paddedData = Array(BUFFER_SIZE - data[ch].length).fill(null).concat(data[ch]);
         let labels = Array(BUFFER_SIZE).fill(null).map((_, idx) => idx);
 
@@ -61,6 +61,8 @@ async function createCharts() {
                 scales: {
                     x: {
                         title: { display: true, text: 'Muestras' },
+                        min:0
+                        max: 1400
                         ticks: { maxTicksLimit: 10 } // Menos marcas para que no se amontonen
                     },
                     y: {
