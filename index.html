@@ -22,27 +22,23 @@
 
 <script>
 const FIREBASE_URL = "https://practicumii-a9956-default-rtdb.firebaseio.com/ad7606.json";
-const BUFFER_SIZE = 1400; // Mantener siempre 1400 muestras visibles
+const BUFFER_SIZE = 1400;
 const CHANNELS = ["CH1","CH2","CH3","CH4","CH5"];
 const COLORS = ["red","blue","green","orange","purple"];
 
-// Función para traer los datos de Firebase
 async function fetchData() {
     const res = await fetch(FIREBASE_URL);
     const data = await res.json();
     return data;
 }
 
-// Función para crear las gráficas
 async function createCharts() {
     const data = await fetchData();
     
     CHANNELS.forEach((ch, i) => {
-        // Rellenar con null si hay menos de 1400 muestras
-        let paddedData = Array(BUFFER_SIZE - data[ch].length).fill(null).concat(data[ch]);
-        
-        // Convertir a formato {x: idx, y: value} para escala lineal
-        let chartData = paddedData.map((v, idx) => ({x: idx, y: v}));
+        // Tomar solo las últimas 1400 muestras
+        let trimmedData = data[ch].slice(-BUFFER_SIZE);
+        let chartData = trimmedData.map((v, idx) => ({x: idx, y: v}));
 
         const ctx = document.getElementById(`ch${i+1}`).getContext('2d');
         new Chart(ctx, {
@@ -53,7 +49,7 @@ async function createCharts() {
                     data: chartData,
                     borderColor: COLORS[i],
                     fill: false,
-                    tension: 0.2,
+                    tension: 0.2
                 }]
             },
             options: {
@@ -61,7 +57,7 @@ async function createCharts() {
                 animation: false,
                 scales: {
                     x: {
-                        type: 'linear', // Escala lineal para que min/max funcione
+                        type: 'linear',
                         title: { display: true, text: 'Muestras' },
                         min: 0,
                         max: BUFFER_SIZE,
@@ -78,7 +74,6 @@ async function createCharts() {
     });
 }
 
-// Ejecutar creación de gráficas al cargar la página
 createCharts();
 </script>
 
