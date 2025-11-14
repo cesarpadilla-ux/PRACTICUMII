@@ -13,16 +13,20 @@
 <body>
 
 <h2>AD7606 - Últimas 1400 muestras</h2>
-
+<title>Canal 1 - ECG</title>
 <canvas id="ch1" width="1000" height="200"></canvas>
+<title>Canal 2 - PPG Índice Derecho</title>
 <canvas id="ch2" width="1000" height="200"></canvas>
+<title>Canal 3 - PPG Índice Izuiqerdos</title>
 <canvas id="ch3" width="1000" height="200"></canvas>
+<title>Canal 4 - PPG Ortejo Derecho</title>
 <canvas id="ch4" width="1000" height="200"></canvas>
+<title>Canal 5 - PPG Ortejo Izquierdo/title>
 <canvas id="ch5" width="1000" height="200"></canvas>
 
 <script>
 const FIREBASE_URL = "https://practicumii-a9956-default-rtdb.firebaseio.com/ad7606.json";
-const BUFFER_SIZE = 5000;
+const BUFFER_SIZE = 1400;
 const CHANNELS = ["CH1","CH2","CH3","CH4","CH5"];
 const COLORS = ["red","blue","green","orange","purple"];
 
