@@ -24,21 +24,31 @@
 </style>
 </head>
 <body>
-<header>Visor EAP — ECG · PPG · AD7606</header>
+<header>Visor Señales ECG / PPG</header>
 <div class="menu">
   <h3>Menú de Señales</h3>
-  <p id="lastUpdate" style="font-size:14px; color:#555; margin-bottom:20px;">Última actualización: --</p>
-
   <button onclick="showPanel('instrucciones')">Instrucciones</button>
+  <button onclick="showPanel('todo')">ECG y PPG</button>
+  
+
+  
   <button onclick="showPanel('ecg')">ECG</button>
   <button onclick="showPanel('ppg_manos')">PPG Manos</button>
   <button onclick="showPanel('ppg_pies')">PPG Pies</button>
   <button onclick="showPanel('comp_manos')">Comparación PPG Manos</button>
   <button onclick="showPanel('comp_pies')">Comparación PPG Pies</button>
-  <button onclick="showPanel('instrucciones')">Instrucciones</button>
+  
 </div>
 
 <div class="content">
+  <div id="todo" class="panel" style="display:none;">
+    <div class="card"><h2>ECG</h2><canvas id="ecgChart_all"></canvas></div>
+    <div class="card"><h2>PPG Índice Izquierdo</h2><canvas id="ppg1_all"></canvas></div>
+    <div class="card"><h2>PPG Índice Derecho</h2><canvas id="ppg2_all"></canvas></div>
+    <div class="card"><h2>PPG Hallux Izquierdo</h2><canvas id="ppg3_all"></canvas></div>
+    <div class="card"><h2>PPG Hallux Derecho</h2><canvas id="ppg4_all"></canvas></div>
+  </div>
+
   <div id="ecg" class="panel">
     <div class="card"><h2>ECG</h2><canvas id="ecgChart"></canvas></div>
   </div>
