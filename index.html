@@ -42,33 +42,33 @@
 
 <div class="content">
   <div id="todo" class="panel" style="display:none;">
-    <div class="card"><h2>ECG</h2><canvas id="ecgChart_all"></canvas></div>
-    <div class="card"><h2>PPG Índice Izquierdo</h2><canvas id="ppg1_all"></canvas></div>
-    <div class="card"><h2>PPG Índice Derecho</h2><canvas id="ppg2_all"></canvas></div>
-    <div class="card"><h2>PPG Hallux Izquierdo</h2><canvas id="ppg3_all"></canvas></div>
-    <div class="card"><h2>PPG Hallux Derecho</h2><canvas id="ppg4_all"></canvas></div>
+    <div class="card"><h2>ECG</h2><canvas style="width:100%; height:auto;" id="ecgChart_all"></canvas></div>
+    <div class="card"><h2>PPG Índice Izquierdo</h2><canvas style="width:100%; height:auto;" id="ppg1_all"></canvas></div>
+    <div class="card"><h2>PPG Índice Derecho</h2><canvas style="width:100%; height:auto;" id="ppg2_all"></canvas></div>
+    <div class="card"><h2>PPG Hallux Izquierdo</h2><canvas style="width:100%; height:auto;" id="ppg3_all"></canvas></div>
+    <div class="card"><h2>PPG Hallux Derecho</h2><canvas style="width:100%; height:auto;" id="ppg4_all"></canvas></div>
   </div>
 
   <div id="ecg" class="panel">
-    <div class="card"><h2>ECG</h2><canvas id="ecgChart"></canvas></div>
+    <div class="card"><h2>ECG</h2><canvas style="width:100%; height:auto;" id="ecgChart"></canvas></div>
   </div>
 
   <div id="ppg_manos" class="panel" style="display:none;">
-    <div class="card"><h2>PPG Índice Izquierdo</h2><canvas id="ppg1"></canvas></div>
-    <div class="card"><h2>PPG Índice Derecho</h2><canvas id="ppg2"></canvas></div>
+    <div class="card"><h2>PPG Índice Izquierdo</h2><canvas style="width:100%; height:auto;" id="ppg1"></canvas></div>
+    <div class="card"><h2>PPG Índice Derecho</h2><canvas style="width:100%; height:auto;" id="ppg2"></canvas></div>
   </div>
 
   <div id="ppg_pies" class="panel" style="display:none;">
-    <div class="card"><h2>PPG Hallux Izquierdo</h2><canvas id="ppg3"></canvas></div>
-    <div class="card"><h2>PPG Hallux Derecho</h2><canvas id="ppg4"></canvas></div>
+    <div class="card"><h2>PPG Hallux Izquierdo</h2><canvas style="width:100%; height:auto;" id="ppg3"></canvas></div>
+    <div class="card"><h2>PPG Hallux Derecho</h2><canvas style="width:100%; height:auto;" id="ppg4"></canvas></div>
   </div>
 
   <div id="comp_manos" class="panel" style="display:none;">
-    <div class="card"><h2>Comparación de Señales — Manos</h2><canvas id="compareManos"></canvas></div>
+    <div class="card"><h2>Comparación de Señales — Manos</h2><canvas style="width:100%; height:auto;" id="compareManos"></canvas></div>
   </div>
 
   <div id="comp_pies" class="panel" style="display:none;">
-    <div class="card"><h2>Comparación de Señales — Pies</h2><canvas id="comparePies"></canvas></div>
+    <div class="card"><h2>Comparación de Señales — Pies</h2><canvas style="width:100%; height:auto;" id="comparePies"></canvas></div>
   </div>
 
   <div id="instrucciones" class="panel" style="display:none;">
@@ -137,7 +137,7 @@ function plot(canvasId, x, y, label, color) {
     },
     options: {
       animation: false,
-      responsive: true,
+      responsive: true, maintainAspectRatio: false,
       scales: {
         x: { title: { display: true, text: 'Tiempo (s)' } },
         y: { title: { display: true, text: 'Voltaje (V)' } }
