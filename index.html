@@ -54,8 +54,7 @@ function toggleMenu(){
   <button onclick="showPanel('ecg')">ECG</button>
   <button onclick="showPanel('ppg_manos')">PPG Manos</button>
   <button onclick="showPanel('ppg_pies')">PPG Pies</button>
-  <button onclick="showPanel('comp_manos')">Comparación PPG Manos</button>
-  <button onclick="showPanel('comp_pies')">Comparación PPG Pies</button>
+  <button onclick="showPanel('comparacion')">Comparación</button>">Comparación PPG Pies</button>
   
 </div>
 
@@ -82,12 +81,10 @@ function toggleMenu(){
     <div class="card"><h2>PPG Hallux Derecho</h2><canvas style="width:100%; height:auto;" id="ppg4"></canvas></div>
   </div>
 
-  <div id="comp_manos" class="panel" style="display:none;">
-    <div class="card"><h2>Comparación de Señales — Manos</h2><canvas style="width:100%; height:auto;" id="compareManos"></canvas></div>
+  
   </div>
 
-  <div id="comp_pies" class="panel" style="display:none;">
-    <div class="card"><h2>Comparación de Señales — Pies</h2><canvas style="width:100%; height:auto;" id="comparePies"></canvas></div>
+  
   </div>
 
   <div id="instrucciones" class="panel" style="display:none;">
@@ -108,8 +105,13 @@ function toggleMenu(){
     <div class="step-box"><div class="step-title">13) Nueva medición</div>Refresque el sitio web para cada nueva toma de datos.</div>
 
   </div>
-</div>
 
+  <div id="comparacion" class="panel" style="display:none;">
+    <div class="card"><h2>Comparación de Índices</h2><canvas id="compareManos" style="width:100%; height:320px;"></canvas></div>
+    <div class="card"><h2>Comparación de Hallux</h2><canvas id="comparePies" style="width:100%; height:320px;"></canvas></div>
+  </div>
+
+</div>
 <script>
 const SAMPLE_RATE = 200;
 
