@@ -1,506 +1,273 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Visor EAP - Señales (ECG / PPG)</title>
-
-<!-- Google Font -->
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-
+<meta charset="UTF-8">
+<title>Menú de Señales</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-  :root{
-    --accent1: linear-gradient(135deg,#4f46e5,#06b6d4);
-    --bg: #0f172a;
-    --card: #0b1220;
-    --muted: #94a3b8;
-  }
-  html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial,sans-serif;background: linear-gradient(180deg,#071028 0%, #071a2a 60%); color:#e6eef8}
-  .app {
-    display:flex;
-    height:100vh;
-    gap:18px;
-    padding:18px;
-    box-sizing:border-box;
-  }
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: white;
+    }
 
-  /* SIDEBAR */
-  .sidebar{
-    width:280px;
-    background:rgba(255,255,255,0.04);
-    border:1px solid rgba(255,255,255,0.04);
-    border-radius:12px;
-    padding:18px;
-    box-shadow: 0 6px 18px rgba(2,6,23,0.6);
-    display:flex;
-    flex-direction:column;
-    align-items:stretch;
-    gap:12px;
-  }
-  .brand{
-    display:flex;align-items:center;gap:12px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.03);
-  }
-  .logo{
-    width:46px;height:46px;border-radius:10px; background:var(--accent1); display:flex; align-items:center; justify-content:center; color:white; font-weight:700; box-shadow:0 6px 18px rgba(79,70,229,0.18);
-  }
-  .brand h1{font-size:18px;margin:0}
-  .brand p{margin:0;font-size:12px;color:var(--muted)}
+    .container {
+        display: flex;
+        height: 100vh;
+    }
 
-  .menu{
-    margin-top:6px; display:flex;flex-direction:column; gap:8px;
-  }
-  .menu button{
-    background:transparent;border:0;color:inherit;padding:12px;border-radius:10px;text-align:left;cursor:pointer;font-weight:600;
-    transition:all .14s;
-  }
-  .menu button:hover{background:rgba(255,255,255,0.02)}
-  .menu button.active{background:linear-gradient(90deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)); box-shadow: inset 0 1px 0 rgba(255,255,255,0.02)}
-  .small {font-size:12px;color:var(--muted);margin-top:8px}
+    /* PANEL LATERAL */
+    .sidebar {
+        width: 260px;
+        background: #f5f5f5;
+        border-right: 1px solid #ddd;
+        padding: 20px;
+        box-sizing: border-box;
+    }
 
-  /* CONTENT */
-  .content{
-    flex:1; overflow:auto;padding:18px;
-  }
-  .top-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
-  .title {
-    font-size:20px;font-weight:700;
-    display:flex;flex-direction:column;
-  }
-  .subtitle {font-size:13px;color:var(--muted); margin-top:4px}
+    .sidebar h2 {
+        font-size: 20px;
+        margin-bottom: 30px;
+        text-align: center;
+        color: #333;
+    }
 
-  /* CARD for instructions */
-  .card{
-    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-    border:1px solid rgba(255,255,255,0.03);
-    border-radius:12px;padding:18px;margin:12px 0;
-    box-shadow: 0 8px 30px rgba(2,6,23,0.6);
-  }
-  .big-steps{
-    display:grid;
-    gap:12px;
-    grid-template-columns: repeat(auto-fit,minmax(260px,1fr));
-  }
-  .step{
-    background:rgba(255,255,255,0.01); padding:12px;border-radius:10px; display:flex;gap:10px;align-items:flex-start;
-  }
-  .badge{
-    min-width:44px;height:44px;border-radius:10px;background:rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:center;font-weight:700;
-  }
-  .step p{margin:0;font-size:14px;color:#e6eef8}
-  .muted{color:var(--muted);font-size:13px;margin-top:8px}
+    .menu-item {
+        padding: 12px;
+        margin-bottom: 10px;
+        background: #e6e6e6;
+        border-radius: 6px;
+        cursor: pointer;
+        text-align: center;
+        font-weight: bold;
+        transition: 0.2s;
+    }
 
-  .controls{
-    display:flex;gap:8px;align-items:center;
-  }
-  .btn{
-    background: linear-gradient(90deg,#2563eb,#06b6d4); padding:10px 14px;border-radius:8px;border:0;color:white;font-weight:700;cursor:pointer;
-  }
-  .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06)}
+    .menu-item:hover {
+        background: #d8d8d8;
+    }
 
-  /* GRAPH AREA */
-  .graphs{margin-top:18px; display:flex;flex-direction:column;gap:18px; align-items:center}
-  .chart-card{width:100%;max-width:980px;background:rgba(255,255,255,0.01);border-radius:12px;padding:10px;border:1px solid rgba(255,255,255,0.02)}
-  canvas{width:100% !important;height:200px !important;display:block}
+    /* CONTENIDO */
+    .content {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+    }
 
-  /* Responsive */
-  @media (max-width:920px){
-    .sidebar{display:none}
-    .app{padding:12px}
-  }
+    h3 {
+        text-align: center;
+        margin-top: 10px;
+    }
+
+    canvas {
+        display: block;
+        margin: 20px auto;
+        border: 1px solid #ccc;
+        width: 95%;
+        height: 250px;
+    }
+
+    /* TARJETA DE INSTRUCCIONES */
+    .card {
+        max-width: 800px;
+        margin: 30px auto;
+        padding: 25px;
+        border-radius: 10px;
+        background: #fafafa;
+        border: 1px solid #ddd;
+        line-height: 1.6;
+        font-size: 17px;
+    }
+
+    .card h2 {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .card li {
+        margin-bottom: 10px;
+    }
 </style>
 </head>
 <body>
 
-<div class="app">
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
-    <div class="brand">
-      <div class="logo">EAP</div>
-      <div>
-        <h1>Visor EAP</h1>
-        <p>ECG · PPG · AD7606</p>
-      </div>
+<div class="container">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <h2>Menú de Señales</h2>
+
+        <div class="menu-item" onclick="showWindow('instrucciones')">
+            Instrucciones de Uso
+        </div>
+        <div class="menu-item" onclick="showWindow('ecg_ppg')">
+            ECG y PPG
+        </div>
+        <div class="menu-item" onclick="showWindow('ecg')">
+            ECG
+        </div>
+        <div class="menu-item" onclick="showWindow('ppg')">
+            PPG
+        </div>
+        <div class="menu-item" onclick="showWindow('ppg_manos')">
+            PPG de Manos
+        </div>
+        <div class="menu-item" onclick="showWindow('ppg_pies')">
+            PPG de Pies
+        </div>
     </div>
 
-    <div class="menu" role="navigation">
-      <button id="m-inicio" class="active" onclick="showSection('inicio')">🏠 Inicio</button>
-      <button id="m-all" onclick="showSection('ecg_ppg')">📈 ECG y PPG (Todos)</button>
-      <button id="m-ecg" onclick="showSection('ecg')">❤️ ECG (Canal 1)</button>
-      <button id="m-ppg" onclick="showSection('ppg')">🩺 PPG (Canales 2-5)</button>
-      <button id="m-manos" onclick="showSection('ppg_manos')">✋ PPG de Manos (CH2, CH3)</button>
-      <button id="m-pies" onclick="showSection('ppg_pies')">🦶 PPG de Pies (CH4, CH5)</button>
+    <!-- CONTENIDO -->
+    <div class="content" id="content">
+
+        <!-- VENTANA: INSTRUCCIONES -->
+        <div id="instrucciones" class="window">
+            <div class="card">
+                <h2>Instrucciones de Uso del Dispositivo</h2>
+                <ol>
+                    <li>Conecte el dispositivo a un enchufe eléctrico.</li>
+                    <li>Encienda el dispositivo con el switch de baterías y el switch de alimentación.</li>
+                    <li>Conecte el dispositivo a un monitor por HDMI y conecte un mouse y teclado por USB.</li>
+                    <li>Espere a que aparezca la interfaz del sistema.</li>
+                    <li>Ingrese al icono de Wi-Fi en la esquina superior derecha y conéctese a una red.</li>
+                    <li>Si no hay Wi-Fi disponible, conecte un cable LAN al puerto correspondiente.</li>
+                    <li>Abra la terminal en la esquina superior izquierda.</li>
+                    <li>Escriba el comando: <b>cd/Desktop/EAP</b></li>
+                    <li>Prepare al paciente y coloque electrodos/dedales según el manual.</li>
+                    <li>Ejecute el comando: <b>python3 eap.py</b></li>
+                    <li>Espere al menos 15 segundos mientras se toman los datos.</li>
+                    <li>Detenga la toma de datos con el botón Detener.</li>
+                    <li>Presione “Ok” cuando aparezca la confirmación de subida a la nube.</li>
+                    <li>Si aparece un error, verifique la conexión a internet.</li>
+                    <li>Recargue esta página web para visualizar los nuevos datos.</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- VENTANA: ECG + PPG -->
+        <div id="ecg_ppg" class="window" style="display:none;">
+            <h3>ECG y PPG</h3>
+            <canvas id="ch1"></canvas>
+            <canvas id="ch2"></canvas>
+            <canvas id="ch3"></canvas>
+            <canvas id="ch4"></canvas>
+            <canvas id="ch5"></canvas>
+        </div>
+
+        <!-- VENTANA: ECG -->
+        <div id="ecg" class="window" style="display:none;">
+            <h3>ECG</h3>
+            <canvas id="ch1_ecg"></canvas>
+        </div>
+
+        <!-- VENTANA: PPG -->
+        <div id="ppg" class="window" style="display:none;">
+            <h3>PPG</h3>
+            <canvas id="ch2_ppg"></canvas>
+            <canvas id="ch3_ppg"></canvas>
+            <canvas id="ch4_ppg"></canvas>
+            <canvas id="ch5_ppg"></canvas>
+        </div>
+
+        <!-- VENTANA: PPG MANOS -->
+        <div id="ppg_manos" class="window" style="display:none;">
+            <h3>PPG de Manos</h3>
+            <canvas id="ch2_manos"></canvas>
+            <canvas id="ch3_manos"></canvas>
+        </div>
+
+        <!-- VENTANA: PPG PIES -->
+        <div id="ppg_pies" class="window" style="display:none;">
+            <h3>PPG de Pies</h3>
+            <canvas id="ch4_pies"></canvas>
+            <canvas id="ch5_pies"></canvas>
+        </div>
+
     </div>
-
-    <div class="small">Últimas señales cargadas desde la Raspberry. Sample rate asumido: <b>200 Hz</b>.</div>
-  </aside>
-
-  <!-- CONTENT -->
-  <main class="content">
-
-    <div class="top-row">
-      <div class="title">Visor de Señales <span class="subtitle">ECG · PPG — AD7606</span></div>
-
-      <div class="controls">
-        <button class="btn" onclick="refreshCurrent()">🔁 Refrescar</button>
-        <button class="btn ghost" onclick="copySteps()">📋 Copiar pasos</button>
-      </div>
-    </div>
-
-    <!-- INICIO -->
-    <section id="inicio" class="card">
-      <h2 style="margin:0 0 8px 0">Instrucciones de Uso (rápidas)</h2>
-      <p class="muted">Sigue estos pasos en el dispositivo antes de ejecutar la adquisición con <code>python3 eap.py</code>.</p>
-
-      <div class="big-steps">
-        <!-- Step 1 -->
-        <div class="step">
-          <div class="badge">1</div>
-          <div>
-            <p><b>Conecte el dispositivo a un enchufe eléctrico.</b></p>
-            <p class="muted">Asegúrate de usar el cable de alimentación oficial o uno de especificación adecuada.</p>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="badge">2</div>
-          <div>
-            <p><b>Encienda el dispositivo</b> usando el switch de baterías y el switch de alimentación.</p>
-            <p class="muted">Verifique las luces indicadoras si las hay.</p>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="badge">3</div>
-          <div>
-            <p><b>Conecte monitor HDMI y periféricos (mouse, teclado).</b></p>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="badge">4</div>
-          <div>
-            <p><b>Espere a que la interfaz del sistema aparezca.</b></p>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="badge">5</div>
-          <div>
-            <p><b>Conéctese a la red:</b> use el ícono de Wi-Fi en la parte superior derecha.</p>
-            <p class="muted">5.1) Si no hay Wi-Fi disponible, conecte por cable LAN al puerto RJ45 junto a los USB.</p>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="badge">6</div>
-          <div>
-            <p><b>Abrir la terminal</b> (esquina superior izquierda).</p>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="badge">7</div>
-          <div>
-            <p><b>Ir a la carpeta del proyecto:</b> <code>cd Desktop/EAP</code></p>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="badge">8</div>
-          <div>
-            <p><b>Preparar al paciente:</b> instalar electrodos de ECG y dedales según manual.</p>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="badge">9</div>
-          <div>
-            <p><b>Ejecutar adquisición:</b> <code>python3 eap.py</code></p>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="badge">10</div>
-          <div>
-            <p><b>Dejar correr al menos 15 segundos</b> (recomendado para un buen registro).</p>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="badge">11</div>
-          <div>
-            <p><b>Detener la toma</b> con el botón "Detener" que aparece en el programa.</p>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="badge">12</div>
-          <div>
-            <p><b>Pulsar "Ok"</b> en la ventana emergente que confirma la subida de archivos.</p>
-            <p class="muted">12.1) Si aparece un error, verifique la conexión a internet.</p>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="badge">13</div>
-          <div>
-            <p><b>Refrescar este sitio web</b> para ver la nueva toma de datos.</p>
-          </div>
-        </div>
-      </div>
-
-      <p style="margin-top:14px;color:var(--muted)">Tip: usa el botón <b>📋 Copiar pasos</b> para pegar estas instrucciones en la Raspberry si no tienes teclado disponible.</p>
-    </section>
-
-    <!-- GRAPHS: multiple sections -->
-    <section id="ecg_ppg" class="card hidden">
-      <h3>ECG y PPG — Todos los canales</h3>
-      <div class="graphs">
-        <div class="chart-card"><canvas id="ch1"></canvas></div>
-        <div class="chart-card"><canvas id="ch2"></canvas></div>
-        <div class="chart-card"><canvas id="ch3"></canvas></div>
-        <div class="chart-card"><canvas id="ch4"></canvas></div>
-        <div class="chart-card"><canvas id="ch5"></canvas></div>
-      </div>
-    </section>
-
-    <section id="ecg" class="card hidden">
-      <h3>ECG — Canal 1</h3>
-      <div class="graphs">
-        <div class="chart-card"><canvas id="ecg_only"></canvas></div>
-      </div>
-    </section>
-
-    <section id="ppg" class="card hidden">
-      <h3>PPG — Canales 2 a 5</h3>
-      <div class="graphs">
-        <div class="chart-card"><canvas id="ppg1"></canvas></div>
-        <div class="chart-card"><canvas id="ppg2"></canvas></div>
-        <div class="chart-card"><canvas id="ppg3"></canvas></div>
-        <div class="chart-card"><canvas id="ppg4"></canvas></div>
-      </div>
-    </section>
-
-    <section id="ppg_manos" class="card hidden">
-      <h3>PPG de Manos (Índices) — CH2 y CH3</h3>
-      <div class="graphs">
-        <div class="chart-card"><canvas id="ppg_m1"></canvas></div>
-        <div class="chart-card"><canvas id="ppg_m2"></canvas></div>
-      </div>
-    </section>
-
-    <section id="ppg_pies" class="card hidden">
-      <h3>PPG de Pies (Hallux) — CH4 y CH5</h3>
-      <div class="graphs">
-        <div class="chart-card"><canvas id="ppg_p1"></canvas></div>
-        <div class="chart-card"><canvas id="ppg_p2"></canvas></div>
-      </div>
-    </section>
-
-  </main>
 </div>
 
+<!-- SCRIPT -->
 <script>
-/* ---------------------- CONFIG ---------------------- */
 const FIREBASE_URL = "https://practicumii-a9956-default-rtdb.firebaseio.com/ad7606.json";
-const SAMPLE_RATE = 200;            // Hz (igual que en tu python)
-const SAMPLE_DT = 1.0 / SAMPLE_RATE;
-const DEFAULT_BUFFER = 3000;        // si tus arrays en Firebase son más pequeños, se ajusta
-const CHANNEL_NAMES = {
-  CH1: "Canal 1 - ECG",
-  CH2: "Canal 2 - PPG Índice Izquierdo",
-  CH3: "Canal 3 - PPG Índice Derecho",
-  CH4: "Canal 4 - PPG Hallux Izquierdo",
-  CH5: "Canal 5 - PPG Hallux Derecho"
-};
-const COLORS = ["#ef4444","#3b82f6","#10b981","#f59e0b","#8b5cf6"];
 
-/* -------------------- UI HELPERS -------------------- */
-function setActiveButton(id){
-  document.querySelectorAll('.menu button').forEach(b => b.classList.remove('active'));
-  const el = document.getElementById(id);
-  if(el) el.classList.add('active');
-}
-function showSection(id){
-  // hide all sections
-  document.querySelectorAll('main .card, main section').forEach(s=>{
-    s.classList.add('hidden');
-  });
-  // show inicio when id == 'inicio'
-  if(id === 'inicio'){
-    document.getElementById('inicio').classList.remove('hidden');
-    setActiveButton('m-inicio');
-  } else {
-    document.getElementById(id).classList.remove('hidden');
-    // set active by mapping
-    switch(id){
-      case 'ecg_ppg': setActiveButton('m-all'); break;
-      case 'ecg': setActiveButton('m-ecg'); break;
-      case 'ppg': setActiveButton('m-ppg'); break;
-      case 'ppg_manos': setActiveButton('m-manos'); break;
-      case 'ppg_pies': setActiveButton('m-pies'); break;
-    }
-    // load charts for that section
-    loadCharts(id);
-  }
+const SAMPLE_RATE = 200; // Hz
+const CHANNEL_LABELS = [
+    "Canal 1 - ECG",
+    "Canal 2 - PPG Índice Izquierdo",
+    "Canal 3 - PPG Índice Derecho",
+    "Canal 4 - PPG Hallux Izquierdo",
+    "Canal 5 - PPG Hallux Derecho"
+];
+
+async function fetchData() {
+    const res = await fetch(FIREBASE_URL);
+    return await res.json();
 }
 
-/* -------------------- Chart management -------------------- */
-const chartStore = {}; // keep Chart instances to destroy before redraw
-function destroyChart(id){
-  if(chartStore[id]){
-    try{ chartStore[id].destroy(); }catch(e){}
-    delete chartStore[id];
-  }
+function generateTimeAxis(length) {
+    return Array.from({ length }, (_, i) => i / SAMPLE_RATE);
 }
 
-/* format time ticks nicely */
-function timeTickFormatter(value){
-  // value in seconds
-  if(value >= 1) return value.toFixed(1) + " s";
-  if(value >= 0.1) return value.toFixed(2) + " s";
-  return value.toFixed(3) + " s";
-}
-
-/* Build chart for given canvas id and array of voltages */
-function buildChartTime(canvasId, volts, color, label){
-  destroyChart(canvasId);
-  // trimmed length n
-  const n = volts.length;
-  if(n === 0){
-    // Clear canvas
-    const ctxEmpty = document.getElementById(canvasId).getContext('2d');
-    ctxEmpty.clearRect(0,0,ctxEmpty.canvas.width, ctxEmpty.canvas.height);
-    return;
-  }
-  // map to time-based points: oldest sample at t=0, newest at t=(n-1)*dt
-  const data = volts.map((v, i) => ({x: i * SAMPLE_DT, y: v}));
-  const maxX = (n - 1) * SAMPLE_DT;
-
-  const ctx = document.getElementById(canvasId).getContext('2d');
-  chartStore[canvasId] = new Chart(ctx, {
-    type: 'line',
-    data: { datasets: [{ label: label, data: data, borderColor: color, borderWidth: 1.6, pointRadius: 0, tension: 0.15, fill:false }]},
-    options: {
-      animation: false,
-      maintainAspectRatio: false,
-      scales: {
-        x: {
-          type: 'linear',
-          title: { display: true, text: 'Tiempo (s)' },
-          min: 0,
-          max: maxX,
-          ticks: { callback: timeTickFormatter }
+function plot(canvasId, data, label, color) {
+    const ctx = document.getElementById(canvasId).getContext("2d");
+    new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: generateTimeAxis(data.length),
+            datasets: [{
+                label,
+                data,
+                borderColor: color,
+                borderWidth: 1,
+                tension: 0.2
+            }]
         },
-        y: {
-          title: { display: true, text: 'Voltaje (V)' }
+        options: {
+            responsive: true,
+            animation: false,
+            scales: {
+                x: { title: { display: true, text: "Tiempo (s)" } },
+                y: { title: { display: true, text: "Voltaje (V)" } }
+            }
         }
-      },
-      plugins: {
-        legend: { display: true, labels: { boxWidth: 12 } }
-      }
-    }
-  });
+    });
 }
 
-/* -------------------- Fetch & draw -------------------- */
-async function fetchData(){
-  try{
-    const res = await fetch(FIREBASE_URL, {cache: "no-store"});
-    if(!res.ok) throw new Error('fetch fail');
-    const json = await res.json();
-    // ensure arrays exist
-    return {
-      CH1: Array.isArray(json?.CH1)? json.CH1.slice(-DEFAULT_BUFFER): [],
-      CH2: Array.isArray(json?.CH2)? json.CH2.slice(-DEFAULT_BUFFER): [],
-      CH3: Array.isArray(json?.CH3)? json.CH3.slice(-DEFAULT_BUFFER): [],
-      CH4: Array.isArray(json?.CH4)? json.CH4.slice(-DEFAULT_BUFFER): [],
-      CH5: Array.isArray(json?.CH5)? json.CH5.slice(-DEFAULT_BUFFER): []
-    };
-  }catch(e){
-    console.warn("No se pudieron obtener datos:", e);
-    return {CH1:[],CH2:[],CH3:[],CH4:[],CH5:[]};
-  }
+async function renderAll() {
+    const data = await fetchData();
+
+    // ECG + PPG
+    plot("ch1", data.CH1, CHANNEL_LABELS[0], "red");
+    plot("ch2", data.CH2, CHANNEL_LABELS[1], "blue");
+    plot("ch3", data.CH3, CHANNEL_LABELS[2], "green");
+    plot("ch4", data.CH4, CHANNEL_LABELS[3], "orange");
+    plot("ch5", data.CH5, CHANNEL_LABELS[4], "purple");
+
+    // ECG
+    plot("ch1_ecg", data.CH1, CHANNEL_LABELS[0], "red");
+
+    // PPG
+    plot("ch2_ppg", data.CH2, CHANNEL_LABELS[1], "blue");
+    plot("ch3_ppg", data.CH3, CHANNEL_LABELS[2], "green");
+    plot("ch4_ppg", data.CH4, CHANNEL_LABELS[3], "orange");
+    plot("ch5_ppg", data.CH5, CHANNEL_LABELS[4], "purple");
+
+    // PPG manos
+    plot("ch2_manos", data.CH2, CHANNEL_LABELS[1], "blue");
+    plot("ch3_manos", data.CH3, CHANNEL_LABELS[2], "green");
+
+    // PPG pies
+    plot("ch4_pies", data.CH4, CHANNEL_LABELS[3], "orange");
+    plot("ch5_pies", data.CH5, CHANNEL_LABELS[4], "purple");
 }
 
-async function loadCharts(section){
-  // fetch once per section change
-  const d = await fetchData();
+renderAll();
 
-  // map to labelled names and colors
-  if(section === 'ecg_ppg'){
-    buildChartTime('ch1', d.CH1, COLORS[0], CHANNEL_NAMES.CH1);
-    buildChartTime('ch2', d.CH2, COLORS[1], CHANNEL_NAMES.CH2);
-    buildChartTime('ch3', d.CH3, COLORS[2], CHANNEL_NAMES.CH3);
-    buildChartTime('ch4', d.CH4, COLORS[3], CHANNEL_NAMES.CH4);
-    buildChartTime('ch5', d.CH5, COLORS[4], CHANNEL_NAMES.CH5);
-  } else if(section === 'ecg'){
-    buildChartTime('ecg_only', d.CH1, COLORS[0], CHANNEL_NAMES.CH1);
-  } else if(section === 'ppg'){
-    buildChartTime('ppg1', d.CH2, COLORS[1], CHANNEL_NAMES.CH2);
-    buildChartTime('ppg2', d.CH3, COLORS[2], CHANNEL_NAMES.CH3);
-    buildChartTime('ppg3', d.CH4, COLORS[3], CHANNEL_NAMES.CH4);
-    buildChartTime('ppg4', d.CH5, COLORS[4], CHANNEL_NAMES.CH5);
-  } else if(section === 'ppg_manos'){
-    buildChartTime('ppg_m1', d.CH2, COLORS[1], CHANNEL_NAMES.CH2);
-    buildChartTime('ppg_m2', d.CH3, COLORS[2], CHANNEL_NAMES.CH3);
-  } else if(section === 'ppg_pies'){
-    buildChartTime('ppg_p1', d.CH4, COLORS[3], CHANNEL_NAMES.CH4);
-    buildChartTime('ppg_p2', d.CH5, COLORS[4], CHANNEL_NAMES.CH5);
-  }
+// Control de ventanas
+function showWindow(id) {
+    document.querySelectorAll(".window").forEach(w => w.style.display = "none");
+    document.getElementById(id).style.display = "block";
 }
-
-/* ----------------- Utilities ----------------- */
-function refreshCurrent(){
-  // find which menu button is active and reload its section
-  const active = Array.from(document.querySelectorAll('.menu button')).find(b=>b.classList.contains('active'));
-  if(!active) { showSection('inicio'); return; }
-  const id = active.id;
-  switch(id){
-    case 'm-inicio': showSection('inicio'); break;
-    case 'm-all': loadCharts('ecg_ppg'); break;
-    case 'm-ecg': loadCharts('ecg'); break;
-    case 'm-ppg': loadCharts('ppg'); break;
-    case 'm-manos': loadCharts('ppg_manos'); break;
-    case 'm-pies': loadCharts('ppg_pies'); break;
-  }
-}
-
-/* Copy steps to clipboard (handy for Raspberry) */
-function copySteps(){
-  const steps = [
-"1) Conecte el dispositivo a un enchufe eléctrico",
-"2) Encienda el dispositivo, con apoyo del switch de baterías y el switch de alimentación",
-"3) Conecte el dispositivo a un monitor mediante el cable HDMI y conecte en los puertos USB un mouse y un teclado.",
-"4) Esperar a que el dispositivo muestre una interfaz.",
-"5) Ingresar al ícono de Wi fi en la parte superior derecha y conectarse a una red.",
-"5.1) En caso de no contar con una red inalámbrica, se puede conectar mediante cable LAN ubicado al lado del conector USB de la raspberry",
-"6) Abrir la terminal ubicada en la parte superior izquierda de la pantalla.",
-"7) Escribir el siguiente comando de ruta \"cd/Desktop/EAP\"",
-"8) Preparar al paciente, conectar los electrodos del ECG y los dedales de acuerdo al manual de usuario.",
-"9) Ejecutar ahora el comando \"python3 eap.py\"",
-"10) Dejar que el programa ejecute las mediciones por lo menos 15 segundos.",
-"11) Detener la toma de datos con el botón detener que emerge cuando se inicia el programa.",
-"12) Pulsar \"Ok\" en la ventana emergente dando conocimiento de una correcta subida de archivos.",
-"12.1) En caso de recibir un mensaje de error, comprobar conexión a internet.",
-"13) Refrescar el sitio web para cada nueva toma de datos."
-  ].join("\n");
-  navigator.clipboard?.writeText(steps).then(()=> alert("Pasos copiados al portapapeles."), ()=> alert("No se pudo copiar."));
-}
-
-/* ----------------- Inicialización ----------------- */
-showSection('inicio'); // start on inicio
-
-// optional: auto-refresh while viewing a section every N seconds
-let autoTimer = null;
-function startAutoRefresh(intervalSec = 4){
-  if(autoTimer) clearInterval(autoTimer);
-  autoTimer = setInterval(()=> refreshCurrent(), intervalSec*1000);
-}
-// startAutoRefresh(6); // si quieres auto refrescar cada 6 s, descomenta
-
 </script>
 
 </body>
