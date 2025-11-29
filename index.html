@@ -2,80 +2,238 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>AD7606 - Últimas 1400 muestras</title>
+<title>Visor EAP - Señales</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
-  body { font-family: Arial, sans-serif; margin: 20px; }
-  h2 { text-align: center; }
-  canvas { display: block; margin: 20px auto; border: 1px solid #ccc; }
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        display: flex;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    /* Menú lateral */
+    #menu {
+        width: 260px;
+        background: #1e1e1e;
+        color: white;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+
+    #menu h2 {
+        margin-top: 0;
+        text-align: center;
+    }
+
+    .menu-item {
+        padding: 12px;
+        margin: 8px 0;
+        background: #333;
+        border-radius: 6px;
+        cursor: pointer;
+        text-align: center;
+        transition: 0.2s;
+    }
+
+    .menu-item:hover {
+        background: #444;
+    }
+
+    /* Contenido */
+    #content {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+    }
+
+    .hidden {
+        display: none;
+    }
+
+    canvas {
+        margin: 20px auto;
+        border: 1px solid #ccc;
+        display: block;
+        width: 100%;
+        max-width: 900px;
+        height: 200px;
+    }
+
+    h1 {
+        font-size: 28px;
+        text-align: center;
+    }
+
+    .instructions {
+        font-size: 18px;
+        line-height: 1.5;
+        max-width: 900px;
+        margin: auto;
+    }
 </style>
 </head>
+
 <body>
 
-<h2>Canal 1 - ECG</h2>
-<canvas id="ch1" width="1000" height="200"></canvas>
-<h2>Canal 2 - PPG Índice Derecho</h2>
-<canvas id="ch2" width="1000" height="200"></canvas>
-<h2>Canal 3 - PPG Índice Izquierdo</h2>
-<canvas id="ch3" width="1000" height="200"></canvas>
-<h2>Canal 4 - PPG Hallux Derecho</h2>
-<canvas id="ch4" width="1000" height="200"></canvas>
-<h2>Canal 5 - PPG Hallux Izquierdo</h2>
-<canvas id="ch5" width="1000" height="200"></canvas>
+<!-- ------------- MENÚ LATERAL ------------- -->
+<div id="menu">
+    <h2>Visor EAP</h2>
+    <div class="menu-item" onclick="showSection('inicio')">Inicio</div>
+    <div class="menu-item" onclick="showSection('ecg_ppg')">ECG y PPG</div>
+    <div class="menu-item" onclick="showSection('ecg')">ECG</div>
+    <div class="menu-item" onclick="showSection('ppg')">PPG</div>
+    <div class="menu-item" onclick="showSection('ppg_manos')">PPG de Manos</div>
+    <div class="menu-item" onclick="showSection('ppg_pies')">PPG de Pies</div>
+</div>
+
+<!-- ------------- CONTENIDO ------------- -->
+<div id="content">
+
+    <!-- Página principal -->
+    <div id="inicio" class="section">
+        <h1>Instrucciones de Uso del Dispositivo</h1>
+        <div class="instructions">
+            <ol>
+                <li>Encienda el dispositivo con el switch de baterías y el switch de alimentación.</li>
+                <li>Conecte monitor HDMI, mouse y teclado.</li>
+                <li>Espere a que aparezca la interfaz.</li>
+                <li>Conéctese a una red WiFi o use cable LAN.</li>
+                <li>Abra la terminal (parte superior izquierda).</li>
+                <li>Ejecute: <b>cd Desktop/EAP</b></li>
+                <li>Prepare al paciente y coloque electrodos según el manual.</li>
+                <li>Ejecute: <b>python3 eap.py</b></li>
+                <li>Espere al menos 15 segundos de medición.</li>
+                <li>Presione "Detener" en el programa.</li>
+                <li>Presione "OK" después de la confirmación de subida.</li>
+                <li>Refresque este sitio web para ver nuevas señales.</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- Sección ECG+PPG -->
+    <div id="ecg_ppg" class="section hidden">
+        <h1>ECG y PPG</h1>
+        <canvas id="ch1"></canvas>
+        <canvas id="ch2"></canvas>
+        <canvas id="ch3"></canvas>
+        <canvas id="ch4"></canvas>
+        <canvas id="ch5"></canvas>
+    </div>
+
+    <!-- Sólo ECG -->
+    <div id="ecg" class="section hidden">
+        <h1>ECG</h1>
+        <canvas id="ecg_only"></canvas>
+    </div>
+
+    <!-- PPG -->
+    <div id="ppg" class="section hidden">
+        <h1>PPG</h1>
+        <canvas id="ppg1"></canvas>
+        <canvas id="ppg2"></canvas>
+        <canvas id="ppg3"></canvas>
+        <canvas id="ppg4"></canvas>
+    </div>
+
+    <!-- PPG manos -->
+    <div id="ppg_manos" class="section hidden">
+        <h1>PPG de Manos</h1>
+        <canvas id="ppg_m1"></canvas>
+        <canvas id="ppg_m2"></canvas>
+    </div>
+
+    <!-- PPG pies -->
+    <div id="ppg_pies" class="section hidden">
+        <h1>PPG de Pies</h1>
+        <canvas id="ppg_p1"></canvas>
+        <canvas id="ppg_p2"></canvas>
+    </div>
+
+</div>
 
 <script>
+// ---------- CONFIGURACIÓN ----------
 const FIREBASE_URL = "https://practicumii-a9956-default-rtdb.firebaseio.com/ad7606.json";
 const BUFFER_SIZE = 1400;
-const CHANNELS = ["CH1","CH2","CH3","CH4","CH5"];
 const COLORS = ["red","blue","green","orange","purple"];
 
-async function fetchData() {
-    const res = await fetch(FIREBASE_URL);
-    const data = await res.json();
-    return data;
+// ---------- CAMBIAR SECCIÓN ----------
+function showSection(id) {
+    document.querySelectorAll(".section").forEach(s => s.classList.add("hidden"));
+    document.getElementById(id).classList.remove("hidden");
+
+    if (id !== "inicio") {
+        loadCharts(id);
+    }
 }
 
-async function createCharts() {
-    const data = await fetchData();
-    
-    CHANNELS.forEach((ch, i) => {
-        // Tomar solo las últimas 1400 muestras
-        let trimmedData = data[ch].slice(-BUFFER_SIZE);
-        let chartData = trimmedData.map((v, idx) => ({x: idx, y: v}));
+// ---------- OBTENER DATOS ----------
+async function fetchData() {
+    const res = await fetch(FIREBASE_URL);
+    return await res.json();
+}
 
-        const ctx = document.getElementById(`ch${i+1}`).getContext('2d');
+// ---------- PINTAR GRÁFICOS ----------
+async function loadCharts(section) {
+    const data = await fetchData();
+
+    function buildChart(id, arr, color) {
+        const ctx = document.getElementById(id).getContext("2d");
         new Chart(ctx, {
-            type: 'line',
+            type: "line",
             data: {
                 datasets: [{
-                    label: ch,
-                    data: chartData,
-                    borderColor: COLORS[i],
+                    data: arr.map((v,i)=>({x:i,y:v})),
+                    borderColor: color,
                     fill: false,
                     tension: 0.2
                 }]
             },
             options: {
-                responsive: true,
                 animation: false,
                 scales: {
-                    x: {
-                        type: 'linear',
-                        title: { display: true, text: 'Muestras' },
-                        min: 0,
-                        max: BUFFER_SIZE,
-                        ticks: { maxTicksLimit: 10 }
-                    },
-                    y: {
-                        title: { display: true, text: 'Voltaje (V)' },
-                    }
+                    x: { type: "linear", min: 0, max: BUFFER_SIZE },
+                    y: { title: { display: true, text: "Voltaje (V)" }}
                 }
             }
         });
-    });
+    }
+
+    let ch = data;
+
+    if (section === "ecg_ppg") {
+        buildChart("ch1", ch.CH1, COLORS[0]);
+        buildChart("ch2", ch.CH2, COLORS[1]);
+        buildChart("ch3", ch.CH3, COLORS[2]);
+        buildChart("ch4", ch.CH4, COLORS[3]);
+        buildChart("ch5", ch.CH5, COLORS[4]);
+    }
+
+    if (section === "ecg") {
+        buildChart("ecg_only", ch.CH1, "red");
+    }
+
+    if (section === "ppg") {
+        buildChart("ppg1", ch.CH2, "blue");
+        buildChart("ppg2", ch.CH3, "green");
+        buildChart("ppg3", ch.CH4, "orange");
+        buildChart("ppg4", ch.CH5, "purple");
+    }
+
+    if (section === "ppg_manos") {
+        buildChart("ppg_m1", ch.CH2, "blue");
+        buildChart("ppg_m2", ch.CH3, "green");
+    }
+
+    if (section === "ppg_pies") {
+        buildChart("ppg_p1", ch.CH4, "orange");
+        buildChart("ppg_p2", ch.CH5, "purple");
+    }
 }
 
-createCharts();
 </script>
 
 </body>
