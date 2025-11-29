@@ -167,3 +167,54 @@ loadData();
 
 </body>
 </html>
+
+// --- PANEL ECG Y PPG (AGREGADO) ---
+async function loadAllECGPPG() {
+  const data = await getAD7606();
+  if (!data) return;
+
+  const labels = data.time || data.ecg?.map((_, i) => i) || [];
+
+  const container = document.getElementById("panelBoth");
+  if (!container) return;
+  container.innerHTML = `<canvas id="chartAllECGPPG" height="120"></canvas>`;
+
+  const ctx = document.getElementById("chartAllECGPPG").getContext("2d");
+
+  const colors = ["red", "blue", "green", "purple", "orange", "brown", "teal", "magenta"]; 
+  const datasets = [];
+  let index = 0;
+
+  for (const key in data) {
+    if (key.toLowerCase().includes("ecg") || key.toLowerCase().includes("ppg")) {
+      datasets.push({
+        label: key.toUpperCase(),
+        data: data[key],
+        borderColor: colors[index % colors.length],
+        borderWidth: 1,
+        fill: false,
+      });
+      index++;
+    }
+  }
+
+  new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets,
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          title: {
+            display: true,
+            text: "Voltaje (V)",
+          }
+        }
+      }
+    }
+  });
+}
+// --- FIN PANEL ECG Y PPG ---
