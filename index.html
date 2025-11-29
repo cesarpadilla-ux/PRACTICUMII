@@ -7,191 +7,167 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
   body { background: #ffffff; font-family: Arial, sans-serif; margin: 0; }
-  header { background: #0d0d0d; color: white; padding: 18px 30px; font-size: 26px; font-weight: bold; display:flex; align-items:center; }
-  header button { margin-right:20px; font-size:22px; background:none; border:none; color:white; cursor:pointer; display:none; }
 
-  .menu { width: 260px; background: #f1f1f1; height: 100vh; padding: 20px; position: fixed; overflow-y: auto; border-right: 2px solid #ddd; transition: transform 0.3s ease; }
-  .menu.hidden { transform: translateX(-270px); }
+  /* Encabezado */
+  header { background: #0d0d0d; color: white; padding: 16px 22px; font-size: 24px; font-weight: bold; }
 
-  .content { margin-left: 290px; padding: 25px; transition: margin-left 0.3s ease; }
-  .content.full { margin-left:20px; }
+  /* Botón menú */
+  .menu-toggle {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    background: #0d0d0d;
+    color: white;
+    border: none;
+    font-size: 22px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    z-index: 1001;
+  }
 
-  .menu h3 { margin-bottom: 8px; }
-  .menu button { width: 100%; padding: 10px; margin-bottom: 10px; border: none; background: #e0e0e0; cursor: pointer; font-size: 15px; border-radius: 6px; }
+  /* Menú lateral */
+  .menu {
+    width: 260px;
+    background: #f1f1f1;
+    height: 100vh;
+    padding: 20px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    border-right: 2px solid #ddd;
+    overflow-y: auto;
+    transform: translateX(-270px);
+    transition: 0.3s ease;
+    z-index: 1000;
+  }
+
+  .menu.open { transform: translateX(0); }
+
+  .menu h3 { margin-top: 60px; }
+
+  .menu button {
+    width: 100%; padding: 10px; margin-bottom: 10px;
+    border: none; background: #e0e0e0;
+    cursor: pointer; font-size: 15px;
+    border-radius: 6px;
+  }
   .menu button:hover { background: #cfcfcf; }
 
-  .card { background: #f9f9f9; padding: 18px; border-radius: 10px; margin-bottom: 25px; border: 1px solid #ddd; }
-  canvas { width:100% !important; max-width:100%; height:300px !important; }
+  /* Contenido */
+  .content { margin-left: 0; padding: 22px; transition: 0.3s; }
 
-  /* Cuadros bonitos para instrucciones */
-  .step-box { background: #fafafa; color: #000; padding: 18px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #ccc; }
-  .step-title { font-size: 20px; font-weight: bold; margin-bottom: 6px; }
+  .panel { width: 100%; max-width: 1000px; margin: auto; }
 
-  @media (max-width: 900px) {
-    header button { display:block; }
-    .menu { transform: translateX(-270px); }
-    .content { margin-left:20px; }
+  .card {
+    background: #fafafa;
+    padding: 18px;
+    border-radius: 10px;
+    margin-bottom: 25px;
+    border: 1px solid #ddd;
+  }
+
+  canvas { width: 100% !important; height: 260px !important; }
+
+  /* Instrucciones bonitas */
+  .step-box {
+    background: #ffffff;
+    padding: 16px;
+    border-radius: 10px;
+    border: 1px solid #bbb;
+    margin-bottom: 15px;
+  }
+  .step-title { font-size: 19px; font-weight: bold; }
+
+  @media (min-width: 900px) {
+    .content { margin-left: 280px; }
+    .menu { transform: translateX(0); }
+    .menu-toggle { display: none; }
   }
 </style>
 </head>
 <body>
-<header><button onclick="toggleMenu()">☰</button>Visor Señales ECG / PPG</header>
-<script>
-function toggleMenu(){
-  const menu=document.querySelector('.menu');
-  const content=document.querySelector('.content');
-  menu.classList.toggle('hidden');
-  content.classList.toggle('full');
-}
-</script>
-<div class="menu">
+
+<button class="menu-toggle" onclick="toggleMenu()">☰</button>
+<header>Visor Señales ECG / PPG</header>
+
+<!-- MENÚ -->
+<div class="menu" id="sideMenu">
   <h3>Menú de Señales</h3>
+
   <button onclick="showPanel('instrucciones')">Instrucciones</button>
   <button onclick="showPanel('todo')">ECG y PPG</button>
-  
-
-  
   <button onclick="showPanel('ecg')">ECG</button>
   <button onclick="showPanel('ppg_manos')">PPG Manos</button>
   <button onclick="showPanel('ppg_pies')">PPG Pies</button>
-  <button onclick="showPanel('comparacion')">Comparación</button>">Comparación PPG Pies</button>
-  
+  <button onclick="showPanel('comparacion')">Comparación</button>
 </div>
 
 <div class="content">
+  <!-- PANEL TODO -->
   <div id="todo" class="panel" style="display:none;">
-    <div class="card"><h2>ECG</h2><canvas style="width:100%; height:auto;" id="ecgChart_all"></canvas></div>
-    <div class="card"><h2>PPG Índice Izquierdo</h2><canvas style="width:100%; height:auto;" id="ppg1_all"></canvas></div>
-    <div class="card"><h2>PPG Índice Derecho</h2><canvas style="width:100%; height:auto;" id="ppg2_all"></canvas></div>
-    <div class="card"><h2>PPG Hallux Izquierdo</h2><canvas style="width:100%; height:auto;" id="ppg3_all"></canvas></div>
-    <div class="card"><h2>PPG Hallux Derecho</h2><canvas style="width:100%; height:auto;" id="ppg4_all"></canvas></div>
+    <div class="card"><h2>ECG</h2><canvas id="ecg_all"></canvas></div>
+    <div class="card"><h2>PPG Índice Izquierdo</h2><canvas id="ppg1_all"></canvas></div>
+    <div class="card"><h2>PPG Índice Derecho</h2><canvas id="ppg2_all"></canvas></div>
+    <div class="card"><h2>PPG Hallux Izquierdo</h2><canvas id="ppg3_all"></canvas></div>
+    <div class="card"><h2>PPG Hallux Derecho</h2><canvas id="ppg4_all"></canvas></div>
   </div>
 
+  <!-- ECG -->
   <div id="ecg" class="panel">
-    <div class="card"><h2>ECG</h2><canvas style="width:100%; height:auto;" id="ecgChart"></canvas></div>
+    <div class="card"><h2>ECG</h2><canvas id="ecgChart"></canvas></div>
   </div>
 
+  <!-- MANOS -->
   <div id="ppg_manos" class="panel" style="display:none;">
-    <div class="card"><h2>PPG Índice Izquierdo</h2><canvas style="width:100%; height:auto;" id="ppg1"></canvas></div>
-    <div class="card"><h2>PPG Índice Derecho</h2><canvas style="width:100%; height:auto;" id="ppg2"></canvas></div>
+    <div class="card"><h2>PPG Índice Izquierdo</h2><canvas id="ppg1"></canvas></div>
+    <div class="card"><h2>PPG Índice Derecho</h2><canvas id="ppg2"></canvas></div>
   </div>
 
+  <!-- PIES -->
   <div id="ppg_pies" class="panel" style="display:none;">
-    <div class="card"><h2>PPG Hallux Izquierdo</h2><canvas style="width:100%; height:auto;" id="ppg3"></canvas></div>
-    <div class="card"><h2>PPG Hallux Derecho</h2><canvas style="width:100%; height:auto;" id="ppg4"></canvas></div>
+    <div class="card"><h2>PPG Hallux Izquierdo</h2><canvas id="ppg3"></canvas></div>
+    <div class="card"><h2>PPG Hallux Derecho</h2><canvas id="ppg4"></canvas></div>
   </div>
 
-  
+  <!-- COMPARACIÓN -->
+  <div id="comparacion" class="panel" style="display:none;">
+    <div class="card"><h2>Comparación — Índices</h2><canvas id="comp_indices"></canvas></div>
+    <div class="card"><h2>Comparación — Hallux</h2><canvas id="comp_hallux"></canvas></div>
   </div>
 
-  
-  </div>
-
+  <!-- INSTRUCCIONES -->
   <div id="instrucciones" class="panel" style="display:none;">
     <h2>Instrucciones del Dispositivo</h2>
 
-    <div class="step-box"><div class="step-title">1) Conectar alimentación</div>Conecte el dispositivo a un enchufe eléctrico.</div>
-    <div class="step-box"><div class="step-title">2) Encendido</div>Encienda el dispositivo usando el switch de baterías y el switch de alimentación.</div>
-    <div class="step-box"><div class="step-title">3) Periféricos y monitor</div>Conecte HDMI y puertos USB para mouse y teclado.</div>
-    <div class="step-box"><div class="step-title">4) Interfaz inicial</div>Espere a que aparezca la interfaz.</div>
-    <div class="step-box"><div class="step-title">5) Conexión a Internet</div>Conéctese a WiFi. Si no hay WiFi, use cable LAN.</div>
-    <div class="step-box"><div class="step-title">6) Abrir Terminal</div>Abra la terminal (parte superior izquierda).</div>
-    <div class="step-box"><div class="step-title">7) Ruta del proyecto</div>Ejecute: <b>cd Desktop/EAP</b></div>
-    <div class="step-box"><div class="step-title">8) Preparación del paciente</div>Colocar electrodos ECG y dedales PPG siguiendo el manual.</div>
-    <div class="step-box"><div class="step-title">9) Ejecutar programa</div>Ejecute: <b>python3 eap.py</b></div>
-    <div class="step-box"><div class="step-title">10) Adquisición</div>Mantenga medición por al menos 15 segundos.</div>
-    <div class="step-box"><div class="step-title">11) Finalizar</div>Use botón "Detener" para finalizar.</div>
-    <div class="step-box"><div class="step-title">12) Confirmación</div>Pulse OK cuando los datos hayan subido correctamente.</div>
-    <div class="step-box"><div class="step-title">13) Nueva medición</div>Refresque el sitio web para cada nueva toma de datos.</div>
-
+    <div class="step-box"><div class="step-title">1) Conectar alimentación</div>Conecte el dispositivo a la corriente.</div>
+    <div class="step-box"><div class="step-title">2) Encendido</div>Active el switch de baterías y el switch principal.</div>
+    <div class="step-box"><div class="step-title">3) Periféricos</div>Conecte monitor, mouse y teclado.</div>
+    <div class="step-box"><div class="step-title">4) Interfaz</div>Espere a que cargue la pantalla inicial.</div>
+    <div class="step-box"><div class="step-title">5) Internet</div>Conéctese a WiFi o use cable LAN.</div>
+    <div class="step-box"><div class="step-title">6) Terminal</div>Abra la terminal.</div>
+    <div class="step-box"><div class="step-title">7) Proyecto</div>Ejecute: <b>cd Desktop/EAP</b></div>
+    <div class="step-box"><div class="step-title">8) Preparación del paciente</div>Coloque electrodos ECG y sensores PPG.</div>
+    <div class="step-box"><div class="step-title">9) Programa</div>Ejecute: <b>python3 eap.py</b></div>
+    <div class="step-box"><div class="step-title">10) Medición</div>Mantenga 15 segundos de registro.</div>
+    <div class="step-box"><div class="step-title">11) Finalizar</div>Use el botón Detener.</div>
+    <div class="step-box"><div class="step-title">12) Confirmar</div>Pulse OK cuando se suban los datos.</div>
   </div>
-
-  <div id="comparacion" class="panel" style="display:none;">
-    <div class="card"><h2>Comparación de Índices</h2><canvas id="compareManos" style="width:100%; height:320px;"></canvas></div>
-    <div class="card"><h2>Comparación de Hallux</h2><canvas id="comparePies" style="width:100%; height:320px;"></canvas></div>
-  </div>
-
 </div>
+
 <script>
 const SAMPLE_RATE = 200;
+
+function toggleMenu() {
+  document.getElementById('sideMenu').classList.toggle('open');
+}
 
 function showPanel(id) {
   document.querySelectorAll('.panel').forEach(p => p.style.display = 'none');
   document.getElementById(id).style.display = 'block';
+  document.getElementById('sideMenu').classList.remove('open');
 }
 
 async function loadData() {
   try {
-    const res = await fetch('https://practicumii-a9956-default-rtdb.firebaseio.com/ad7606.json');
-    const data = await res.json();
-
-    const t = data.CH1.map((v, i) => i * (1 / SAMPLE_RATE));
-
-    plot('ecgChart', t, data.CH1, 'ECG', 'red');
-    plot('ppg1', t, data.CH2, 'PPG Índice Izquierdo', 'red');
-    plot('ppg2', t, data.CH3, 'PPG Índice Derecho', 'red');
-    plot('ppg3', t, data.CH4, 'PPG Hallux Izquierdo', 'red');
-    plot('ppg4', t, data.CH5, 'PPG Hallux Derecho', 'red');
-
-    compare('compareManos', t, data.CH2, data.CH3, 'Índice Izq', 'Índice Der');
-    compare('comparePies', t, data.CH4, data.CH5, 'Hallux Izq', 'Hallux Der');
-
-    // Gráficas del panel "todo"
-    plot('ecgChart_all', t, data.CH1, 'ECG', 'red');
-    plot('ppg1_all', t, data.CH2, 'PPG Índice Izquierdo', 'red');
-    plot('ppg2_all', t, data.CH3, 'PPG Índice Derecho', 'red');
-    plot('ppg3_all', t, data.CH4, 'PPG Hallux Izquierdo', 'red');
-    plot('ppg4_all', t, data.CH5, 'PPG Hallux Derecho', 'red');;
-  } catch (e) {
-    console.error('Error cargando datos', e);
-  }
-}
-
-function plot(canvasId, x, y, label, color) {
-  const ctx = document.getElementById(canvasId);
-  if (!ctx) return;
-  new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: x,
-      datasets: [{ label, data: y, borderWidth: 1, borderColor: color }]
-    },
-    options: {
-      animation: false,
-      responsive: true, maintainAspectRatio: false,
-      scales: {
-        x: { title: { display: true, text: 'Tiempo (s)' } },
-        y: { title: { display: true, text: 'Voltaje (V)' } }
-      }
-    }
-  });
-}
-
-function compare(canvasId, x, y1, y2, l1, l2) {
-  const ctx = document.getElementById(canvasId);
-  if (!ctx) return;
-  new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: x,
-      datasets: [
-        { label: l1, data: y1, borderWidth: 1, borderColor: '#0066ff' },
-        { label: l2, data: y2, borderWidth: 1, borderColor: '#00aa44' }
-      ]
-    },
-    options: {
-      animation: false,
-      responsive: true,
-      scales: {
-        x: { title: { display: true, text: 'Tiempo (s)' } },
-        y: { title: { display: true, text: 'Voltaje (V)' } }
-      }
-    }
-  });
-}
-
-loadData();
-</script>
-
-</body>
-</html>
+    const res = await
