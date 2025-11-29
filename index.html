@@ -1,264 +1,245 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Visor Señales ECG / PPG</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-  /* General */
-  :root{ --menu-w:270px; --canvas-w:1000px; --canvas-h:350px; }
-  html,body{height:100%; margin:0; font-family: Arial, sans-serif; background:#fff; color:#111}
-  header{background:#0d0d0d;color:#fff;padding:14px 18px;font-size:20px;text-align:center;font-weight:600;position:relative;z-index:1200}
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Visor Señales ECG / PPG</title>
 
-  /* Always-visible menu button (on top) */
-  .menu-toggle{
-    position: fixed;
-    top: 12px;
-    left: 12px;
-    z-index:1400;
-    background:#0d0d0d;color:#fff;border:0;padding:10px 12px;border-radius:6px;
-    cursor:pointer;font-size:20px;
-  }
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  /* Sidebar menu */
-  .menu{
-    position: fixed;
-    top:0;
-    left:0;
-    width:var(--menu-w);
-    height:100%;
-    padding:22px;
-    box-sizing:border-box;
-    background:#f6f6f6;
-    border-right:1px solid #ddd;
-    z-index:1300;
-    overflow:auto;
-    transform: translateX(0); /* start visible */
-  }
-  .menu h3{margin:0 0 12px 0}
-  .menu button{display:block;width:100%;padding:10px;margin:8px 0;border:0;background:#e9e9e9;border-radius:6px;cursor:pointer;font-weight:600}
-  .menu button:hover{background:#ddd}
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            overflow-x: hidden;
+        }
 
-  /* Content area */
-  .content{margin-left:calc(var(--menu-w) + 20px); padding:22px; box-sizing:border-box;}
-  .panel{max-width:1200px;margin:0 auto;}
-  .card{background:#fff;border:1px solid #e6e6e6;border-radius:10px;padding:16px;margin-bottom:18px;box-shadow:0 1px 3px rgba(0,0,0,0.03)}
+        /* ─────────────── NAV SUPERIOR ─────────────── */
+        .navbar {
+            width: 100%;
+            background: #111;
+            color: white;
+            padding: 15px;
+            font-size: 22px;
+            font-weight: bold;
+            text-align: center;
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+        }
 
-  /* Canvas sizing like your example but scalable */
-  .chart-canvas{
-    display:block;
-    margin:12px auto;
-    width:var(--canvas-w);
-    height:var(--canvas-h);
-    max-width:100%; /* lets browsers scale it down on small screens while keeping proportion */
-    border:1px solid #ccc;
-    box-sizing:border-box;
-  }
+        /* ─────────────── BOTÓN HAMBURGUESA ─────────────── */
+        #menu-btn {
+            position: fixed;
+            top: 13px;
+            left: 15px;
+            width: 35px;
+            height: 35px;
+            background: #111;
+            color: white;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 22px;
+            cursor: pointer;
+            z-index: 1100;
+        }
 
-  /* Instruction boxes */
-  .step-box{background:#fff;border:1px solid #ddd;padding:12px;border-radius:8px;margin-bottom:12px}
-  .step-title{font-weight:700;margin-bottom:6px}
+        /* ─────────────── MENÚ LATERAL ─────────────── */
+        #sidebar {
+            position: fixed;
+            top: 0;
+            left: -260px; /* HIDDEN */
+            width: 250px;
+            height: 100%;
+            background: white;
+            padding-top: 70px;
+            box-shadow: 3px 0 6px rgba(0, 0, 0, 0.2);
+            transition: left 0.3s ease;
+            z-index: 1050;
+        }
 
-  /* Small screens: keep behavior same (menu doesn't auto-hide), content uses full width but menu remains accessible via button */
-  @media (max-width:900px){
-    .content{margin-left:12px;padding:16px} /* keep some margin so menu still accessible, but content uses screen */
-  }
+        #sidebar.show {
+            left: 0; /* VISIBLE */
+        }
 
-</style>
+        .menu-item {
+            padding: 16px;
+            margin: 10px;
+            background: #e9e9e9;
+            font-size: 18px;
+            border-radius: 12px;
+            cursor: pointer;
+            text-align: center;
+            transition: background 0.2s ease;
+        }
+
+        .menu-item:hover {
+            background: #d5d5d5;
+        }
+
+        /* ─────────────── CONTENIDO ─────────────── */
+        .content {
+            margin-top: 80px;
+            padding: 20px;
+            margin-left: 0;
+            transition: margin-left 0.3s ease;
+        }
+
+        /* En pantallas grandes el menú está siempre visible */
+        @media (min-width: 900px) {
+            #sidebar {
+                left: 0;
+            }
+            #menu-btn {
+                display: none;
+            }
+            .content {
+                margin-left: 260px;
+            }
+        }
+
+        /* Gráficas responsivas reales */
+        .chart-container {
+            width: 100%;
+            max-width: 900px;
+            margin: auto;
+        }
+
+        canvas {
+            width: 100% !important;
+            height: auto !important;
+        }
+    </style>
 </head>
 <body>
 
-<!-- menu toggle always visible and above everything -->
-<button class="menu-toggle" aria-label="Mostrar menú" onclick="toggleMenu()">☰</button>
+    <div class="navbar">Visor Señales ECG / PPG</div>
 
-<header>Visor Señales ECG / PPG</header>
+    <!-- Botón hamburguesa -->
+    <div id="menu-btn">&#9776;</div>
 
-<!-- Sidebar menu (starts visible) -->
-<nav class="menu" id="sideMenu" aria-label="Menú de señales">
-  <h3>Menú de Señales</h3>
-  <button onclick="showPanel('instrucciones')">Instrucciones</button>
-  <button onclick="showPanel('todo')">ECG y PPG</button>
-  <button onclick="showPanel('ecg')">ECG</button>
-  <button onclick="showPanel('ppg_manos')">PPG Manos</button>
-  <button onclick="showPanel('ppg_pies')">PPG Pies</button>
-  <button onclick="showPanel('comparacion')">Comparación</button>
-</nav>
-
-<!-- Main content -->
-<main class="content" id="mainContent">
-
-  <!-- INSTRUCCIONES -->
-  <section id="instrucciones" class="panel">
-    <h2>Instrucciones del Dispositivo</h2>
-    <div class="card">
-      <div class="step-box"><div class="step-title">Encendido</div>Conecte la alimentación y active los switches (batería y alimentación).</div>
-      <div class="step-box"><div class="step-title">Periféricos</div>Conecte monitor por HDMI y mouse/teclado por USB.</div>
-      <div class="step-box"><div class="step-title">Red</div>Conéctese a Wi-Fi o utilice cable LAN.</div>
-      <div class="step-box"><div class="step-title">Terminal</div>Abra la terminal y vaya a la carpeta del proyecto.</div>
-      <div class="step-box"><div class="step-title">Comando</div>Ejecute: <code>cd Desktop/EAP</code> y luego <code>python3 eap.py</code>.</div>
-      <div class="step-box"><div class="step-title">Paciente</div>Coloque electrodos ECG y sensores PPG según manual.</div>
-      <div class="step-box"><div class="step-title">Medición</div>Registre al menos 15 segundos.</div>
-      <div class="step-box"><div class="step-title">Finalización</div>Presione Detener y confirme la subida a Firebase.</div>
+    <!-- MENÚ LATERAL -->
+    <div id="sidebar">
+        <div class="menu-item" onclick="showSection('instrucciones')">Instrucciones</div>
+        <div class="menu-item" onclick="showSection('ecgppg')">ECG y PPG</div>
+        <div class="menu-item" onclick="showSection('ecg')">ECG</div>
+        <div class="menu-item" onclick="showSection('ppg_manos')">PPG Manos</div>
+        <div class="menu-item" onclick="showSection('ppg_pies')">PPG Pies</div>
+        <div class="menu-item" onclick="showSection('comparacion')">Comparación</div>
     </div>
-  </section>
 
-  <!-- TODO: all channels -->
-  <section id="todo" class="panel" style="display:none">
-    <div class="card"><h3>ECG</h3><canvas id="ecg_all" class="chart-canvas" width="1000" height="350"></canvas></div>
-    <div class="card"><h3>PPG Índice Izquierdo</h3><canvas id="ppg1_all" class="chart-canvas" width="1000" height="350"></canvas></div>
-    <div class="card"><h3>PPG Índice Derecho</h3><canvas id="ppg2_all" class="chart-canvas" width="1000" height="350"></canvas></div>
-    <div class="card"><h3>PPG Hallux Izquierdo</h3><canvas id="ppg3_all" class="chart-canvas" width="1000" height="350"></canvas></div>
-    <div class="card"><h3>PPG Hallux Derecho</h3><canvas id="ppg4_all" class="chart-canvas" width="1000" height="350"></canvas></div>
-  </section>
+    <!-- CONTENIDO -->
+    <div class="content">
 
-  <!-- ECG single -->
-  <section id="ecg" class="panel" style="display:none">
-    <div class="card"><h3>ECG</h3><canvas id="ecgChart" class="chart-canvas" width="1000" height="350"></canvas></div>
-  </section>
+        <!-- INSTRUCCIONES -->
+        <div id="instrucciones" class="section">
+            <h2>Instrucciones del Dispositivo</h2>
+            <p><b>Encendido:</b> Conecte la alimentación...</p>
+        </div>
 
-  <!-- PPG manos -->
-  <section id="ppg_manos" class="panel" style="display:none">
-    <div class="card"><h3>PPG Índice Izquierdo</h3><canvas id="ppg1" class="chart-canvas" width="1000" height="350"></canvas></div>
-    <div class="card"><h3>PPG Índice Derecho</h3><canvas id="ppg2" class="chart-canvas" width="1000" height="350"></canvas></div>
-  </section>
+        <!-- ECG + PPG -->
+        <div id="ecgppg" class="section" style="display: none;">
+            <h2>ECG y PPG</h2>
+            <div class="chart-container"><canvas id="chart-ecgppg"></canvas></div>
+        </div>
 
-  <!-- PPG pies -->
-  <section id="ppg_pies" class="panel" style="display:none">
-    <div class="card"><h3>PPG Hallux Izquierdo</h3><canvas id="ppg3" class="chart-canvas" width="1000" height="350"></canvas></div>
-    <div class="card"><h3>PPG Hallux Derecho</h3><canvas id="ppg4" class="chart-canvas" width="1000" height="350"></canvas></div>
-  </section>
+        <!-- ECG -->
+        <div id="ecg" class="section" style="display: none;">
+            <h2>ECG</h2>
+            <div class="chart-container"><canvas id="chart-ecg"></canvas></div>
+        </div>
 
-  <!-- Comparación (único panel) -->
-  <section id="comparacion" class="panel" style="display:none">
-    <div class="card"><h3>Comparación — Índices</h3><canvas id="comp_indices" class="chart-canvas" width="1000" height="350"></canvas></div>
-    <div class="card"><h3>Comparación — Hallux</h3><canvas id="comp_hallux" class="chart-canvas" width="1000" height="350"></canvas></div>
-  </section>
+        <!-- PPG MANOS -->
+        <div id="ppg_manos" class="section" style="display: none;">
+            <h2>PPG Manos</h2>
+            <div class="chart-container"><canvas id="chart-ppg-manos"></canvas></div>
+        </div>
 
-</main>
+        <!-- PPG PIES -->
+        <div id="ppg_pies" class="section" style="display: none;">
+            <h2>PPG Pies</h2>
+            <div class="chart-container"><canvas id="chart-ppg-pies"></canvas></div>
+        </div>
 
-<script>
-/* ---------------- CONFIG ---------------- */
-const SAMPLE_RATE = 200; // Hz (para reconstruir eje X en segundos)
-const FIREBASE_URL = "https://practicumii-a9956-default-rtdb.firebaseio.com/ad7606.json";
-let charts = {}; // guardamos instancias Chart.js
+        <!-- COMPARACIÓN -->
+        <div id="comparacion" class="section" style="display: none;">
+            <h2>Comparación de Índices</h2>
+            <div class="chart-container"><canvas id="chart-comparacion1"></canvas></div>
 
-/* ------------- UI Helpers -------------- */
-function toggleMenu(){
-  const m = document.getElementById('sideMenu');
-  m.classList.toggle('open');
-  // menu visibility toggled; do NOT auto-hide or auto-show otherwise
-}
+            <h2>Comparación Hallux</h2>
+            <div class="chart-container"><canvas id="chart-comparacion2"></canvas></div>
+        </div>
 
-function showPanel(id){
-  document.querySelectorAll('.panel').forEach(p => p.style.display = 'none');
-  const el = document.getElementById(id);
-  if(el) el.style.display = 'block';
-  // do NOT close menu automatically; keep menu state as user left it
-}
+    </div>
 
-/* ------------- Fetch & Utilities ------------- */
-async function getFirebaseData(){
-  try{
-    const res = await fetch(FIREBASE_URL + '?t=' + Date.now(), {cache: "no-store"});
-    if(!res.ok) throw new Error("Fetch failed");
-    const json = await res.json();
-    // Ensure arrays exist; if missing, return empty arrays to avoid crashes
-    return {
-      CH1: Array.isArray(json?.CH1) ? json.CH1 : [],
-      CH2: Array.isArray(json?.CH2) ? json.CH2 : [],
-      CH3: Array.isArray(json?.CH3) ? json.CH3 : [],
-      CH4: Array.isArray(json?.CH4) ? json.CH4 : [],
-      CH5: Array.isArray(json?.CH5) ? json.CH5 : []
-    };
-  }catch(e){
-    console.warn("Error fetching firebase:", e);
-    return {CH1:[],CH2:[],CH3:[],CH4:[],CH5:[]};
-  }
-}
+    <script>
+        /* ───────── MENÚ ───────── */
+        const sidebar = document.getElementById("sidebar");
+        const menuBtn = document.getElementById("menu-btn");
 
-// build points as {x:timeSeconds, y:value}
-function toTimePoints(arr){
-  return arr.map((v,i)=>({x: i / SAMPLE_RATE, y: v}));
-}
+        menuBtn.onclick = () => {
+            sidebar.classList.toggle("show");
+        };
 
-/* ------------- Chart helpers ------------- */
-function destroyChart(key){
-  if(charts[key]){ try{ charts[key].destroy(); }catch(e){} delete charts[key]; }
-}
+        function showSection(id) {
+            let sections = document.querySelectorAll(".section");
+            sections.forEach(sec => sec.style.display = "none");
 
-// Note: we set responsive:false so Chart.js draws using canvas pixel dimensions (1000x350)
-// and the browser scales the canvas down on small screens via CSS max-width.
-function createSingleChart(canvasId, label, color, arr){
-  destroyChart(canvasId);
-  const c = document.getElementById(canvasId);
-  if(!c) return;
-  const ctx = c.getContext('2d');
-  const points = toTimePoints(arr);
-  charts[canvasId] = new Chart(ctx, {
-    type: 'line',
-    data: { datasets: [{ label, data: points, borderColor: color, fill:false, pointRadius:0, tension:0.15 }]},
-    options: {
-      responsive: false,
-      animation: false,
-      scales: {
-        x: { type:'linear', title:{display:true, text: 'Tiempo (s)'} },
-        y: { title:{display:true, text: 'Voltaje (V)'} }
-      },
-      plugins: { legend: { display: true } }
-    }
-  });
-}
+            document.getElementById(id).style.display = "block";
 
-function createComparisonChart(canvasId, labelA, arrA, labelB, arrB){
-  destroyChart(canvasId);
-  const c = document.getElementById(canvasId);
-  if(!c) return;
-  const ctx = c.getContext('2d');
-  const a = toTimePoints(arrA);
-  const b = toTimePoints(arrB);
-  charts[canvasId] = new Chart(ctx, {
-    type:'line',
-    data:{ datasets:[
-      { label: labelA, data: a, borderColor:'red', fill:false, pointRadius:0, tension:0.15 },
-      { label: labelB, data: b, borderColor:'blue', fill:false, pointRadius:0, tension:0.15 }
-    ]},
-    options:{
-      responsive:false,
-      animation:false,
-      scales:{ x:{ type:'linear', title:{display:true,text:'Tiempo (s)'} }, y:{ title:{display:true,text:'Voltaje (V)'} } },
-      plugins:{ legend:{ display:true } }
-    }
-  });
-}
+            // Cerrar menú en móviles
+            if (window.innerWidth < 900) {
+                sidebar.classList.remove("show");
+            }
+        }
 
-/* ------------- Main plotting ------------- */
-async function renderAll(){
-  const d = await getFirebaseData();
-  // create single-channel charts (all red)
-  createSingleChart('ecg_all', 'Canal 1 - ECG', 'red', d.CH1);
-  createSingleChart('ppg1_all', 'Canal 2 - PPG Índice Izquierdo', 'red', d.CH2);
-  createSingleChart('ppg2_all', 'Canal 3 - PPG Índice Derecho', 'red', d.CH3);
-  createSingleChart('ppg3_all', 'Canal 4 - PPG Hallux Izquierdo', 'red', d.CH4);
-  createSingleChart('ppg4_all', 'Canal 5 - PPG Hallux Derecho', 'red', d.CH5);
+        /* ───────── CONFIGURACIÓN DE GRÁFICAS ───────── */
+        const options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: { title: { display: true, text: "Tiempo (s)" }},
+                y: { title: { display: true, text: "Voltaje (V)" }}
+            },
+            plugins: {
+                tooltip: { enabled: true }
+            }
+        };
 
-  // individual panels
-  createSingleChart('ecgChart', 'Canal 1 - ECG', 'red', d.CH1);
-  createSingleChart('ppg1', 'Canal 2 - PPG Índice Izquierdo', 'red', d.CH2);
-  createSingleChart('ppg2', 'Canal 3 - PPG Índice Derecho', 'red', d.CH3);
-  createSingleChart('ppg3', 'Canal 4 - PPG Hallux Izquierdo', 'red', d.CH4);
-  createSingleChart('ppg4', 'Canal 5 - PPG Hallux Derecho', 'red', d.CH5);
+        /* Datos temporales (REEMPLAZARÁS ESTO CON TUS SEÑALES) */
+        const dummyX = Array.from({length: 100}, (_, i) => i * 0.01);
+        const dummyY = dummyX.map(x => Math.sin(10*x));
 
-  // comparisons
-  createComparisonChart('comp_indices', 'Índice Izq', d.CH2, 'Índice Der', d.CH3);
-  createComparisonChart('comp_hallux', 'Hallux Izq', d.CH4, 'Hallux Der', d.CH5);
-}
+        function crearGrafica(id, color="red") {
+            new Chart(document.getElementById(id), {
+                type: "line",
+                data: {
+                    labels: dummyX,
+                    datasets: [{
+                        label: "Señal",
+                        data: dummyY,
+                        borderColor: color,
+                        borderWidth: 2,
+                        pointRadius: 0
+                    }]
+                },
+                options: options
+            });
+        }
 
-/* ------------- Init & periodic refresh ------------- */
-renderAll();                    // first render
-const REFRESH_MS = 4000;
-setInterval(renderAll, REFRESH_MS);
+        /* CREAR TODAS LAS GRÁFICAS */
+        crearGrafica("chart-ecgppg");
+        crearGrafica("chart-ecg");
+        crearGrafica("chart-ppg-manos");
+        crearGrafica("chart-ppg-pies");
 
-</script>
+        crearGrafica("chart-comparacion1", "blue");
+        crearGrafica("chart-comparacion2", "green");
+    </script>
+
 </body>
 </html>
