@@ -3,131 +3,393 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Señales ECG / PPG</title>
+<title>Visor de ECG / PPG</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-  body { background: #ffffff; font-family: Arial, sans-serif; margin: 0; }
-  header { background: #0d0d0d; color: white; padding: 18px 30px; font-size: 26px; font-weight: bold; }
-  h2 { margin-top: 0; }
-  .container { padding: 25px; }
-  .menu { width: 260px; background: #f1f1f1; height: 100vh; padding: 20px; position: fixed; overflow-y: auto; border-right: 2px solid #ddd; }
-  .content { margin-left: 290px; padding: 25px; }
-  .menu h3 { margin-bottom: 8px; }
-  .menu button { width: 100%; padding: 10px; margin-bottom: 10px; border: none; background: #e0e0e0; cursor: pointer; font-size: 15px; border-radius: 6px; }
-  .menu button:hover { background: #cfcfcf; }
-  .card { background: #f9f9f9; padding: 18px; border-radius: 10px; margin-bottom: 25px; border: 1px solid #ddd; }
+  /* --- Estilos Base --- */
+  body { 
+    background: #ffffff; 
+    font-family: Arial, sans-serif; 
+    margin: 0; 
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
 
-  /* Cuadros bonitos para instrucciones */
-  .step-box { background: #0d0d0d; color: white; padding: 18px; border-radius: 12px; margin-bottom: 15px; }
-  .step-title { font-size: 20px; font-weight: bold; margin-bottom: 6px; }
+  /* --- Header --- */
+  header { 
+    background: #0d0d0d; 
+    color: white; 
+    padding: 15px; 
+    font-size: 22px; 
+    font-weight: bold; 
+    text-align: center; /* Centrado */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  }
 
+  /* Botón de menú (Hamburguesa) solo visible en móvil por defecto */
+  .menu-toggle {
+    position: absolute;
+    left: 20px;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    display: none; /* Se activa con media query */
+  }
+
+  /* --- Layout Principal --- */
+  .main-container {
+    display: flex;
+    margin-top: 60px; /* Espacio para el header fijo */
+    height: calc(100vh - 60px);
+    width: 100%;
+  }
+
+  /* --- Menú Lateral --- */
+  .menu { 
+    width: 260px; 
+    background: #f1f1f1; 
+    padding: 20px; 
+    overflow-y: auto; 
+    border-right: 2px solid #ddd; 
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
+  }
+
+  .menu h3 { margin-top: 0; margin-bottom: 15px; text-align: center; }
+  
+  .menu button { 
+    width: 100%; 
+    padding: 12px; 
+    margin-bottom: 10px; 
+    border: none; 
+    background: #e0e0e0; 
+    cursor: pointer; 
+    font-size: 15px; 
+    border-radius: 6px; 
+    font-weight: bold;
+    color: #333;
+    transition: background 0.2s;
+  }
+  .menu button:hover { background: #d4d4d4; }
+  .menu button.active { background: #0d0d0d; color: white; }
+
+  /* --- Contenido --- */
+  .content { 
+    flex-grow: 1; 
+    padding: 20px; 
+    overflow-y: auto; 
+    background: #fff;
+  }
+
+  /* --- Tarjetas y Gráficas --- */
+  .card { 
+    background: #fff; 
+    padding: 15px; 
+    border-radius: 10px; 
+    margin-bottom: 25px; 
+    border: 1px solid #ddd; 
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+  
+  h2 { margin-top: 0; font-size: 1.2rem; text-align: center; color: #333; }
+
+  /* Contenedor relativo para canvas para evitar que se aplaste */
+  .chart-container {
+    position: relative;
+    height: 300px; /* Altura fija base para evitar aplastamiento */
+    width: 100%;
+  }
+
+  /* --- Instrucciones --- */
+  .step-box { 
+    background: #0d0d0d; 
+    color: white; 
+    padding: 15px; 
+    border-radius: 8px; 
+    margin-bottom: 12px; 
+    font-size: 0.95rem;
+  }
+  .step-title { 
+    font-size: 1.1rem; 
+    font-weight: bold; 
+    color: #4caf50; /* Un toque de color para resaltar */
+    margin-bottom: 5px; 
+  }
+
+  /* --- RESPONSIVIDAD (Móvil) --- */
+  @media (max-width: 768px) {
+    .menu-toggle { display: block; } /* Mostrar botón menú */
+    
+    header { font-size: 18px; padding: 15px 0; }
+
+    .menu {
+      position: fixed;
+      left: 0;
+      top: 60px; /* Debajo del header */
+      height: calc(100vh - 60px);
+      z-index: 999;
+      transform: translateX(-100%); /* Oculto por defecto */
+      box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+    }
+
+    .menu.open {
+      transform: translateX(0); /* Mostrar al abrir */
+    }
+
+    .content {
+      padding: 15px;
+    }
+
+    .chart-container {
+      height: 250px; /* Un poco más pequeño en móvil pero consistente */
+    }
+  }
 </style>
 </head>
 <body>
-<header>Visor EAP — ECG · PPG · AD7606</header>
-<div class="menu">
-  <h3>Menú de Señales</h3>
-  <p id="lastUpdate" style="font-size:14px; color:#555; margin-bottom:20px;">Última actualización: --</p>
 
-  <button onclick="showPanel('ecg')">ECG</button>
-  <button onclick="showPanel('ppg_manos')">PPG Manos</button>
-  <button onclick="showPanel('ppg_pies')">PPG Pies</button>
-  <button onclick="showPanel('comp_manos')">Comparación PPG Manos</button>
-  <button onclick="showPanel('comp_pies')">Comparación PPG Pies</button>
-  <button onclick="showPanel('instrucciones')">Instrucciones</button>
-</div>
+<header>
+  <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+  Visor de ECG / PPG
+</header>
 
-<div class="content">
-  <div id="ecg" class="panel">
-    <div class="card"><h2>ECG</h2><canvas id="ecgChart"></canvas></div>
+<div class="main-container">
+  <!-- Menú Lateral -->
+  <div class="menu" id="sidebar">
+    <h3>Menú</h3>
+    <!-- Instrucciones PRIMERO como solicitaste -->
+    <button onclick="showPanel('instrucciones', this)" class="active">Instrucciones</button>
+    <button onclick="showPanel('ecg', this)">ECG</button>
+    <button onclick="showPanel('ppg_manos', this)">PPG Manos</button>
+    <button onclick="showPanel('ppg_pies', this)">PPG Pies</button>
+    <button onclick="showPanel('comp_manos', this)">Comparación Manos</button>
+    <button onclick="showPanel('comp_pies', this)">Comparación Pies</button>
   </div>
 
-  <div id="ppg_manos" class="panel" style="display:none;">
-    <div class="card"><h2>PPG Índice Izquierdo</h2><canvas id="ppg1"></canvas></div>
-    <div class="card"><h2>PPG Índice Derecho</h2><canvas id="ppg2"></canvas></div>
-  </div>
+  <!-- Área de Contenido -->
+  <div class="content">
+    
+    <!-- Panel Instrucciones (Visible por defecto) -->
+    <div id="instrucciones" class="panel">
+      <h2>Instrucciones del Dispositivo</h2>
+      <div class="step-box"><div class="step-title">1) Conectar alimentación</div>Conecte el dispositivo a un enchufe eléctrico.</div>
+      <div class="step-box"><div class="step-title">2) Encendido</div>Encienda el switch de baterías y el de alimentación.</div>
+      <div class="step-box"><div class="step-title">3) Periféricos</div>Conecte HDMI, Mouse y Teclado.</div>
+      <div class="step-box"><div class="step-title">4) Interfaz</div>Espere a que cargue el sistema.</div>
+      <div class="step-box"><div class="step-title">5) Internet</div>Conecte a WiFi o cable LAN.</div>
+      <div class="step-box"><div class="step-title">6) Terminal</div>Abra la terminal (icono negro).</div>
+      <div class="step-box"><div class="step-title">7) Ruta</div>Escriba: <b>cd Desktop/EAP</b></div>
+      <div class="step-box"><div class="step-title">8) Paciente</div>Coloque electrodos y dedales según diagrama.</div>
+      <div class="step-box"><div class="step-title">9) Ejecutar</div>Escriba: <b>python3 eap.py</b></div>
+      <div class="step-box"><div class="step-title">10) Medir</div>Mantenga quieto al paciente 15s.</div>
+      <div class="step-box"><div class="step-title">11) Refrescar</div>Actualice esta página para ver los nuevos datos.</div>
+    </div>
 
-  <div id="ppg_pies" class="panel" style="display:none;">
-    <div class="card"><h2>PPG Hallux Izquierdo</h2><canvas id="ppg3"></canvas></div>
-    <div class="card"><h2>PPG Hallux Derecho</h2><canvas id="ppg4"></canvas></div>
-  </div>
+    <!-- Panel ECG -->
+    <div id="ecg" class="panel" style="display:none;">
+      <div class="card">
+        <h2>Señal ECG</h2>
+        <div class="chart-container"><canvas id="ecgChart"></canvas></div>
+      </div>
+    </div>
 
-  <div id="comp_manos" class="panel" style="display:none;">
-    <div class="card"><h2>Comparación de Señales — Manos</h2><canvas id="compareManos"></canvas></div>
-  </div>
+    <!-- Panel PPG Manos -->
+    <div id="ppg_manos" class="panel" style="display:none;">
+      <div class="card">
+        <h2>PPG Índice Izquierdo</h2>
+        <div class="chart-container"><canvas id="ppg1"></canvas></div>
+      </div>
+      <div class="card">
+        <h2>PPG Índice Derecho</h2>
+        <div class="chart-container"><canvas id="ppg2"></canvas></div>
+      </div>
+    </div>
 
-  <div id="comp_pies" class="panel" style="display:none;">
-    <div class="card"><h2>Comparación de Señales — Pies</h2><canvas id="comparePies"></canvas></div>
-  </div>
+    <!-- Panel PPG Pies -->
+    <div id="ppg_pies" class="panel" style="display:none;">
+      <div class="card">
+        <h2>PPG Hallux Izquierdo</h2>
+        <div class="chart-container"><canvas id="ppg3"></canvas></div>
+      </div>
+      <div class="card">
+        <h2>PPG Hallux Derecho</h2>
+        <div class="chart-container"><canvas id="ppg4"></canvas></div>
+      </div>
+    </div>
 
-  <div id="instrucciones" class="panel" style="display:none;">
-    <h2>Instrucciones del Dispositivo</h2>
+    <!-- Panel Comparación Manos -->
+    <div id="comp_manos" class="panel" style="display:none;">
+      <div class="card">
+        <h2>Comparativa: Manos (Izq vs Der)</h2>
+        <div class="chart-container"><canvas id="compareManos"></canvas></div>
+      </div>
+    </div>
 
-    <div class="step-box"><div class="step-title">1) Conectar alimentación</div>Conecte el dispositivo a un enchufe eléctrico.</div>
-    <div class="step-box"><div class="step-title">2) Encendido</div>Encienda el dispositivo usando el switch de baterías y el switch de alimentación.</div>
-    <div class="step-box"><div class="step-title">3) Periféricos y monitor</div>Conecte HDMI y puertos USB para mouse y teclado.</div>
-    <div class="step-box"><div class="step-title">4) Interfaz inicial</div>Espere a que aparezca la interfaz.</div>
-    <div class="step-box"><div class="step-title">5) Conexión a Internet</div>Conéctese a WiFi. Si no hay WiFi, use cable LAN.</div>
-    <div class="step-box"><div class="step-title">6) Abrir Terminal</div>Abra la terminal (parte superior izquierda).</div>
-    <div class="step-box"><div class="step-title">7) Ruta del proyecto</div>Ejecute: <b>cd Desktop/EAP</b></div>
-    <div class="step-box"><div class="step-title">8) Preparación del paciente</div>Colocar electrodos ECG y dedales PPG siguiendo el manual.</div>
-    <div class="step-box"><div class="step-title">9) Ejecutar programa</div>Ejecute: <b>python3 eap.py</b></div>
-    <div class="step-box"><div class="step-title">10) Adquisición</div>Mantenga medición por al menos 15 segundos.</div>
-    <div class="step-box"><div class="step-title">11) Finalizar</div>Use botón "Detener" para finalizar.</div>
-    <div class="step-box"><div class="step-title">12) Confirmación</div>Pulse OK cuando los datos hayan subido correctamente.</div>
-    <div class="step-box"><div class="step-title">13) Nueva medición</div>Refresque el sitio web para cada nueva toma de datos.</div>
+    <!-- Panel Comparación Pies -->
+    <div id="comp_pies" class="panel" style="display:none;">
+      <div class="card">
+        <h2>Comparativa: Pies (Izq vs Der)</h2>
+        <div class="chart-container"><canvas id="comparePies"></canvas></div>
+      </div>
+    </div>
 
   </div>
 </div>
 
 <script>
-const SAMPLE_RATE = 200;
+// --- Configuración Global ---
+const FIREBASE_URL = 'https://practicumii-a9956-default-rtdb.firebaseio.com/ad7606.json';
+const BUFFER_SIZE = 1400; // Muestras a graficar
+const SAMPLE_RATE = 200;  // Frecuencia de muestreo (Hz)
+let charts = {}; // Para almacenar instancias y destruirlas al recargar
 
-function showPanel(id) {
+// --- Funciones UI ---
+function toggleMenu() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+function showPanel(id, btn) {
+  // Ocultar todos los paneles
   document.querySelectorAll('.panel').forEach(p => p.style.display = 'none');
+  // Mostrar el seleccionado
   document.getElementById(id).style.display = 'block';
+  
+  // Manejo de botones activos
+  if (btn) {
+    document.querySelectorAll('.menu button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  // En móvil, cerrar menú al seleccionar
+  if (window.innerWidth <= 768) {
+    document.getElementById('sidebar').classList.remove('open');
+  }
 }
 
+// --- Lógica de Datos y Gráficas ---
 async function loadData() {
-  const res = await fetch('https://practicumii-a9956-default-rtdb.firebaseio.com/ad7606.json');
-  const data = await res.json();
+  try {
+    const res = await fetch(FIREBASE_URL);
+    const data = await res.json();
 
-  const lastTime = new Date().toLocaleString('es-MX', { timeZone: 'America/Mexico_City' });
-  document.getElementById('lastUpdate').innerText = `Última actualización: ${lastTime}`;
+    if (!data) return;
 
-  const t = data.CH1.map((v,i)=> i * (1/SAMPLE_RATE));
+    // Procesar datos: Tomar solo las últimas BUFFER_SIZE muestras
+    const ecg = sliceData(data.CH1);
+    const ppgIzqMano = sliceData(data.CH2);
+    const ppgDerMano = sliceData(data.CH3);
+    const ppgIzqPie = sliceData(data.CH4);
+    const ppgDerPie = sliceData(data.CH5);
 
-  plot('ecgChart', t, data.CH1, 'ECG');
-  plot('ppg1', t, data.CH2, 'PPG Índice Izquierdo');
-  plot('ppg2', t, data.CH3, 'PPG Índice Derecho');
-  plot('ppg3', t, data.CH4, 'PPG Hallux Izquierdo');
-  plot('ppg4', t, data.CH5, 'PPG Hallux Derecho');
+    // Eje X: Tiempo (s) = Índice / Tasa de Muestreo
+    // Si tenemos 1400 muestras a 200Hz, esto irá de 0 a 7 segundos.
+    const labels = Array.from({length: ecg.length}, (_, i) => (i / SAMPLE_RATE));
 
-  compare('compareManos', t, data.CH2, data.CH3, 'Índice Izq', 'Índice Der');
-  compare('comparePies', t, data.CH4, data.CH5, 'Hallux Izq', 'Hallux Der');
+    // Renderizar Gráficas Individuales (ROJAS)
+    renderChart('ecgChart', labels, [{ label: 'ECG', data: ecg, color: 'red' }]);
+    renderChart('ppg1', labels, [{ label: 'Índice Izq', data: ppgIzqMano, color: 'red' }]);
+    renderChart('ppg2', labels, [{ label: 'Índice Der', data: ppgDerMano, color: 'red' }]);
+    renderChart('ppg3', labels, [{ label: 'Hallux Izq', data: ppgIzqPie, color: 'red' }]);
+    renderChart('ppg4', labels, [{ label: 'Hallux Der', data: ppgDerPie, color: 'red' }]);
+
+    // Renderizar Comparaciones (AZUL y VERDE)
+    renderChart('compareManos', labels, [
+      { label: 'Índice Izq', data: ppgIzqMano, color: 'blue' },
+      { label: 'Índice Der', data: ppgDerMano, color: 'green' }
+    ]);
+
+    renderChart('comparePies', labels, [
+      { label: 'Hallux Izq', data: ppgIzqPie, color: 'blue' },
+      { label: 'Hallux Der', data: ppgDerPie, color: 'green' }
+    ]);
+
+  } catch (error) {
+    console.error("Error cargando datos:", error);
+  }
 }
 
-function plot(canvasId, x, y, label) {
-  new Chart(document.getElementById(canvasId), {
+// Función auxiliar para recortar array
+function sliceData(arr) {
+  if (!arr) return [];
+  return arr.slice(-BUFFER_SIZE);
+}
+
+// Función genérica de Chart.js
+function renderChart(canvasId, labels, datasets) {
+  const ctx = document.getElementById(canvasId).getContext('2d');
+
+  // Si ya existe una gráfica en este canvas, destruirla
+  if (charts[canvasId]) {
+    charts[canvasId].destroy();
+  }
+
+  // Preparar datasets
+  const chartDatasets = datasets.map(ds => ({
+    label: ds.label,
+    data: ds.data,
+    borderColor: ds.color,
+    backgroundColor: ds.color,
+    borderWidth: 1.5,
+    pointRadius: 0, 
+    fill: false,
+    tension: 0.2
+  }));
+
+  charts[canvasId] = new Chart(ctx, {
     type: 'line',
-    data: { labels: x, datasets: [{ label, data: y, borderWidth: 1 }] },
-    options: { responsive: true, scales: { x: { title: {display:true, text:'Tiempo (s)'} }, y:{} } }
+    data: {
+      labels: labels,
+      datasets: chartDatasets
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false, 
+      animation: false, 
+      interaction: {
+        mode: 'index',
+        intersect: false,
+      },
+      plugins: {
+        legend: { display: true }
+      },
+      scales: {
+        x: {
+          display: true,
+          type: 'linear', // Usar escala lineal para mejor manejo numérico
+          title: { display: true, text: 'Tiempo (s)' }, // Eje X actualizado
+          ticks: { 
+            maxTicksLimit: 10,
+            stepSize: 1 // Mostrar pasos de 1 segundo si es posible
+          }
+        },
+        y: {
+          display: true,
+          title: { 
+            display: true, 
+            text: 'Voltaje (V)',
+            font: { weight: 'bold' }
+          },
+          beginAtZero: false
+        }
+      }
+    }
   });
 }
 
-function compare(canvasId, x, y1, y2, l1, l2) {
-  new Chart(document.getElementById(canvasId), {
-    type: 'line',
-    data: { labels: x, datasets: [
-      { label: l1, data: y1, borderWidth: 1 },
-      { label: l2, data: y2, borderWidth: 1 }
-    ]},
-    options: { responsive: true, scales: { x: { title:{display:true,text:'Tiempo (s)'} }, y:{} } }
-  });
-}
-
+// Iniciar carga
 loadData();
-</script>
 
+</script>
 </body>
 </html>
