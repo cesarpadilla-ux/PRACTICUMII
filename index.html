@@ -170,11 +170,14 @@
     <h3>Menú</h3>
     <!-- Instrucciones PRIMERO como solicitaste -->
     <button onclick="showPanel('instrucciones', this)" class="active">Instrucciones</button>
+    <button onclick="showPanel('all_view', this)">ECG y PPG </button>
     <button onclick="showPanel('ecg', this)">ECG</button>
+    <button onclick="showPanel('ppg_view', this)">PPG </button>
     <button onclick="showPanel('ppg_manos', this)">PPG Manos</button>
     <button onclick="showPanel('ppg_pies', this)">PPG Pies</button>
     <button onclick="showPanel('comp_manos', this)">Comparación Manos</button>
     <button onclick="showPanel('comp_pies', this)">Comparación Pies</button>
+    
   </div>
 
   <!-- Área de Contenido -->
@@ -185,15 +188,16 @@
       <h2>Instrucciones del Dispositivo</h2>
       <div class="step-box"><div class="step-title">1) Conectar alimentación</div>Conecte el dispositivo a un enchufe eléctrico.</div>
       <div class="step-box"><div class="step-title">2) Encendido</div>Encienda el switch de baterías y el de alimentación.</div>
-      <div class="step-box"><div class="step-title">3) Periféricos</div>Conecte HDMI, Mouse y Teclado.</div>
+      <div class="step-box"><div class="step-title">3) Periféricos</div>Conecte HDMI, Mouse y Teclado a las entradas del dispositivo.</div>
       <div class="step-box"><div class="step-title">4) Interfaz</div>Espere a que cargue el sistema.</div>
-      <div class="step-box"><div class="step-title">5) Internet</div>Conecte a WiFi o cable LAN.</div>
-      <div class="step-box"><div class="step-title">6) Terminal</div>Abra la terminal (icono negro).</div>
-      <div class="step-box"><div class="step-title">7) Ruta</div>Escriba: <b>cd Desktop/EAP</b></div>
-      <div class="step-box"><div class="step-title">8) Paciente</div>Coloque electrodos y dedales según diagrama.</div>
-      <div class="step-box"><div class="step-title">9) Ejecutar</div>Escriba: <b>python3 eap.py</b></div>
-      <div class="step-box"><div class="step-title">10) Medir</div>Mantenga quieto al paciente 15s.</div>
-      <div class="step-box"><div class="step-title">11) Refrescar</div>Actualice esta página para ver los nuevos datos.</div>
+      <div class="step-box"><div class="step-title">5) Internet</div>Conecte a conexión WiFi o en caso de no contar, conectar mediante cable LAN.</div>
+      <div class="step-box"><div class="step-title">6) Terminal</div>Abra la terminal situada en la esquina superior izquierda.</div>
+      <div class="step-box"><div class="step-title">7) Ruta</div>Escriba en la terminal: <b>cd Desktop/EAP</b> y presione enter.</div>
+      <div class="step-box"><div class="step-title">8) Paciente</div>Coloque electrodos y dedales según manual de usuario.</div>
+      <div class="step-box"><div class="step-title">9) Ejecutar</div>Escriba en la terminal: <b>python3 eap.py</b> y presione enter.</div>
+      <div class="step-box"><div class="step-title">10) Medir</div> Adquiera datos durante un mínimo de 15 segundos, posteriormente presione el botón de la ventana emergente "detener". </div>
+      <div class="step-box"><div class="step-title">11) Confirmación</div> Asegúrese de que se imprima un mensaje de confirmación de transferencia de datos. En caso de presentar error, verificar conexión a internet. </div>
+      <div class="step-box"><div class="step-title">12) Refrescar</div>Actualice esta página para ver los nuevos datos.</div>
     </div>
 
     <!-- Panel ECG -->
@@ -244,14 +248,35 @@
       </div>
     </div>
 
+    <!-- Panel TODOS (ECG + PPG) -->
+    <div id="all_view" class="panel" style="display:none;">
+      <h2 style="margin-bottom:20px;"> Vista de Todas las Señales</h2>
+      <div class="card"><h2>ECG</h2><div class="chart-container"><canvas id="all_c1"></canvas></div></div>
+      <div class="card"><h2>PPG Índice Izq</h2><div class="chart-container"><canvas id="all_c2"></canvas></div></div>
+      <div class="card"><h2>PPG Índice Der</h2><div class="chart-container"><canvas id="all_c3"></canvas></div></div>
+      <div class="card"><h2>PPG Hallux Izq</h2><div class="chart-container"><canvas id="all_c4"></canvas></div></div>
+      <div class="card"><h2>PPG Hallux Der</h2><div class="chart-container"><canvas id="all_c5"></canvas></div></div>
+    </div>
+
+    <!-- Panel SOLO PPG -->
+    <div id="ppg_view" class="panel" style="display:none;">
+      <h2 style="margin-bottom:20px;">Vista de Todos los PPG </h2>
+      <div class="card"><h2>PPG Índice Izq</h2><div class="chart-container"><canvas id="ppg_only_c2"></canvas></div></div>
+      <div class="card"><h2>PPG Índice Der</h2><div class="chart-container"><canvas id="ppg_only_c3"></canvas></div></div>
+      <div class="card"><h2>PPG Hallux Izq</h2><div class="chart-container"><canvas id="ppg_only_c4"></canvas></div></div>
+      <div class="card"><h2>PPG Hallux Der</h2><div class="chart-container"><canvas id="ppg_only_c5"></canvas></div></div>
+    </div>
+
   </div>
 </div>
 
 <script>
 // --- Configuración Global ---
 const FIREBASE_URL = 'https://practicumii-a9956-default-rtdb.firebaseio.com/ad7606.json';
-const BUFFER_SIZE = 1400; // Muestras a graficar
 const SAMPLE_RATE = 200;  // Frecuencia de muestreo (Hz)
+const SECONDS_TO_SHOW = 15; // Segundos deseados
+const BUFFER_SIZE = SAMPLE_RATE * SECONDS_TO_SHOW; // 3000 muestras
+
 let charts = {}; // Para almacenar instancias y destruirlas al recargar
 
 // --- Funciones UI ---
@@ -293,17 +318,17 @@ async function loadData() {
     const ppgDerPie = sliceData(data.CH5);
 
     // Eje X: Tiempo (s) = Índice / Tasa de Muestreo
-    // Si tenemos 1400 muestras a 200Hz, esto irá de 0 a 7 segundos.
+    // Si tenemos 3000 muestras a 200Hz, esto irá de 0 a 15 segundos.
     const labels = Array.from({length: ecg.length}, (_, i) => (i / SAMPLE_RATE));
 
-    // Renderizar Gráficas Individuales (ROJAS)
+    // 1. Gráficas Individuales (Paneles originales) - ROJAS
     renderChart('ecgChart', labels, [{ label: 'ECG', data: ecg, color: 'red' }]);
     renderChart('ppg1', labels, [{ label: 'Índice Izq', data: ppgIzqMano, color: 'red' }]);
     renderChart('ppg2', labels, [{ label: 'Índice Der', data: ppgDerMano, color: 'red' }]);
     renderChart('ppg3', labels, [{ label: 'Hallux Izq', data: ppgIzqPie, color: 'red' }]);
     renderChart('ppg4', labels, [{ label: 'Hallux Der', data: ppgDerPie, color: 'red' }]);
 
-    // Renderizar Comparaciones (AZUL y VERDE)
+    // 2. Comparaciones (AZUL y VERDE)
     renderChart('compareManos', labels, [
       { label: 'Índice Izq', data: ppgIzqMano, color: 'blue' },
       { label: 'Índice Der', data: ppgDerMano, color: 'green' }
@@ -313,6 +338,19 @@ async function loadData() {
       { label: 'Hallux Izq', data: ppgIzqPie, color: 'blue' },
       { label: 'Hallux Der', data: ppgDerPie, color: 'green' }
     ]);
+
+    // 3. Nueva Pestaña "ECG y PPG" (Todos los canales) - ROJAS
+    renderChart('all_c1', labels, [{ label: 'ECG', data: ecg, color: 'red' }]);
+    renderChart('all_c2', labels, [{ label: 'Índice Izq', data: ppgIzqMano, color: 'red' }]);
+    renderChart('all_c3', labels, [{ label: 'Índice Der', data: ppgDerMano, color: 'red' }]);
+    renderChart('all_c4', labels, [{ label: 'Hallux Izq', data: ppgIzqPie, color: 'red' }]);
+    renderChart('all_c5', labels, [{ label: 'Hallux Der', data: ppgDerPie, color: 'red' }]);
+
+    // 4. Nueva Pestaña "PPG" (Solo los 4 PPG) - ROJAS
+    renderChart('ppg_only_c2', labels, [{ label: 'Índice Izq', data: ppgIzqMano, color: 'red' }]);
+    renderChart('ppg_only_c3', labels, [{ label: 'Índice Der', data: ppgDerMano, color: 'red' }]);
+    renderChart('ppg_only_c4', labels, [{ label: 'Hallux Izq', data: ppgIzqPie, color: 'red' }]);
+    renderChart('ppg_only_c5', labels, [{ label: 'Hallux Der', data: ppgDerPie, color: 'red' }]);
 
   } catch (error) {
     console.error("Error cargando datos:", error);
@@ -369,8 +407,8 @@ function renderChart(canvasId, labels, datasets) {
           type: 'linear', // Usar escala lineal para mejor manejo numérico
           title: { display: true, text: 'Tiempo (s)' }, // Eje X actualizado
           ticks: { 
-            maxTicksLimit: 10,
-            stepSize: 1 // Mostrar pasos de 1 segundo si es posible
+            maxTicksLimit: 15, // Aumentado ligeramente para 15s
+            stepSize: 1 
           }
         },
         y: {
