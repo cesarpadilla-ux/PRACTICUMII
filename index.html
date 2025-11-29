@@ -4,14 +4,23 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Señales ECG / PPG</title>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
-  body { background: #ffffff; font-family: Arial, sans-serif; margin: 0; }
+  body { background: #ffffff; margin: 0; font-family: Arial, sans-serif; }
 
   /* Encabezado */
-  header { background: #0d0d0d; color: white; padding: 16px 22px; font-size: 24px; font-weight: bold; }
+  header {
+    background: #0d0d0d;
+    color: white;
+    padding: 16px 22px;
+    font-size: 22px;
+    font-weight: bold;
+    text-align: center;
+  }
 
-  /* Botón menú */
+  /* BOTÓN MENÚ */
   .menu-toggle {
     position: fixed;
     top: 15px;
@@ -23,76 +32,94 @@
     padding: 8px 12px;
     border-radius: 6px;
     cursor: pointer;
-    z-index: 1001;
+    z-index: 1002;
   }
 
-  /* Menú lateral */
+  /* MENÚ */
   .menu {
-    width: 260px;
-    background: #f1f1f1;
+    width: 270px;
+    background: #f7f7f7;
     height: 100vh;
-    padding: 20px;
     position: fixed;
     top: 0;
     left: 0;
-    border-right: 2px solid #ddd;
+    padding: 25px;
     overflow-y: auto;
-    transform: translateX(-270px);
+    border-right: 2px solid #ddd;
+    transform: translateX(-300px);
     transition: 0.3s ease;
-    z-index: 1000;
+    z-index: 1001;
   }
-
   .menu.open { transform: translateX(0); }
 
-  .menu h3 { margin-top: 60px; }
-
+  /* Botones menú */
   .menu button {
-    width: 100%; padding: 10px; margin-bottom: 10px;
-    border: none; background: #e0e0e0;
-    cursor: pointer; font-size: 15px;
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 12px;
+    border: none;
+    background: #e5e5e5;
     border-radius: 6px;
+    font-size: 15px;
+    cursor: pointer;
   }
-  .menu button:hover { background: #cfcfcf; }
+  .menu button:hover { background: #d1d1d1; }
 
-  /* Contenido */
-  .content { margin-left: 0; padding: 22px; transition: 0.3s; }
+  /* CONTENIDO */
+  .content {
+    padding: 25px;
+    margin-left: 0;
+    transition: margin-left 0.3s ease;
+  }
 
-  .panel { width: 100%; max-width: 1000px; margin: auto; }
+  /* PANEL */
+  .panel { max-width: 1000px; margin: auto; }
 
   .card {
     background: #fafafa;
-    padding: 18px;
-    border-radius: 10px;
-    margin-bottom: 25px;
+    padding: 20px;
+    border-radius: 12px;
     border: 1px solid #ddd;
+    margin-bottom: 25px;
   }
 
-  canvas { width: 100% !important; height: 260px !important; }
+  canvas {
+    width: 100% !important;
+    height: 280px !important;
+  }
 
-  /* Instrucciones bonitas */
+  /* INSTRUCCIONES DISEÑO */
   .step-box {
-    background: #ffffff;
-    padding: 16px;
+    background: white;
     border-radius: 10px;
-    border: 1px solid #bbb;
-    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    padding: 14px;
+    margin-bottom: 14px;
   }
-  .step-title { font-size: 19px; font-weight: bold; }
+  .step-title {
+    font-size: 17px;
+    font-weight: bold;
+    margin-bottom: 6px;
+  }
 
+  /* Versión PC */
   @media (min-width: 900px) {
-    .content { margin-left: 280px; }
     .menu { transform: translateX(0); }
+    .content { margin-left: 290px; }
     .menu-toggle { display: none; }
   }
+
 </style>
 </head>
+
 <body>
 
 <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+
 <header>Visor Señales ECG / PPG</header>
 
 <!-- MENÚ -->
-<div class="menu" id="sideMenu">
+<div class="menu" id="menu">
   <h3>Menú de Señales</h3>
 
   <button onclick="showPanel('instrucciones')">Instrucciones</button>
@@ -103,8 +130,25 @@
   <button onclick="showPanel('comparacion')">Comparación</button>
 </div>
 
+<!-- CONTENIDO -->
 <div class="content">
-  <!-- PANEL TODO -->
+
+  <!-- INSTRUCCIONES -->
+  <div id="instrucciones" class="panel">
+    <h2>Instrucciones del Dispositivo</h2>
+
+    <div class="step-box"><div class="step-title">Encendido</div>Active el switch principal y de baterías.</div>
+    <div class="step-box"><div class="step-title">Periféricos</div>Conecte monitor, mouse y teclado.</div>
+    <div class="step-box"><div class="step-title">Conexión</div>Conecte WiFi o cable LAN.</div>
+    <div class="step-box"><div class="step-title">Terminal</div>Abra la terminal de Linux.</div>
+    <div class="step-box"><div class="step-title">Proyecto</div>Ejecute <b>cd Desktop/EAP</b>.</div>
+    <div class="step-box"><div class="step-title">Paciente</div>Coloque electrodos ECG y sensores PPG.</div>
+    <div class="step-box"><div class="step-title">Programa</div>Ejecute <b>python3 eap.py</b>.</div>
+    <div class="step-box"><div class="step-title">Medición</div>Registre 15 s de señales.</div>
+    <div class="step-box"><div class="step-title">Finalización</div>Presione Detener y confirme.</div>
+  </div>
+
+  <!-- TODO -->
   <div id="todo" class="panel" style="display:none;">
     <div class="card"><h2>ECG</h2><canvas id="ecg_all"></canvas></div>
     <div class="card"><h2>PPG Índice Izquierdo</h2><canvas id="ppg1_all"></canvas></div>
@@ -114,60 +158,158 @@
   </div>
 
   <!-- ECG -->
-  <div id="ecg" class="panel">
+  <div id="ecg" class="panel" style="display:none;">
     <div class="card"><h2>ECG</h2><canvas id="ecgChart"></canvas></div>
   </div>
 
-  <!-- MANOS -->
+  <!-- PPG MANOS -->
   <div id="ppg_manos" class="panel" style="display:none;">
     <div class="card"><h2>PPG Índice Izquierdo</h2><canvas id="ppg1"></canvas></div>
     <div class="card"><h2>PPG Índice Derecho</h2><canvas id="ppg2"></canvas></div>
   </div>
 
-  <!-- PIES -->
+  <!-- PPG PIES -->
   <div id="ppg_pies" class="panel" style="display:none;">
     <div class="card"><h2>PPG Hallux Izquierdo</h2><canvas id="ppg3"></canvas></div>
     <div class="card"><h2>PPG Hallux Derecho</h2><canvas id="ppg4"></canvas></div>
   </div>
 
-  <!-- COMPARACIÓN -->
+  <!-- COMPARACION -->
   <div id="comparacion" class="panel" style="display:none;">
     <div class="card"><h2>Comparación — Índices</h2><canvas id="comp_indices"></canvas></div>
     <div class="card"><h2>Comparación — Hallux</h2><canvas id="comp_hallux"></canvas></div>
   </div>
 
-  <!-- INSTRUCCIONES -->
-  <div id="instrucciones" class="panel" style="display:none;">
-    <h2>Instrucciones del Dispositivo</h2>
-
-    <div class="step-box"><div class="step-title">1) Conectar alimentación</div>Conecte el dispositivo a la corriente.</div>
-    <div class="step-box"><div class="step-title">2) Encendido</div>Active el switch de baterías y el switch principal.</div>
-    <div class="step-box"><div class="step-title">3) Periféricos</div>Conecte monitor, mouse y teclado.</div>
-    <div class="step-box"><div class="step-title">4) Interfaz</div>Espere a que cargue la pantalla inicial.</div>
-    <div class="step-box"><div class="step-title">5) Internet</div>Conéctese a WiFi o use cable LAN.</div>
-    <div class="step-box"><div class="step-title">6) Terminal</div>Abra la terminal.</div>
-    <div class="step-box"><div class="step-title">7) Proyecto</div>Ejecute: <b>cd Desktop/EAP</b></div>
-    <div class="step-box"><div class="step-title">8) Preparación del paciente</div>Coloque electrodos ECG y sensores PPG.</div>
-    <div class="step-box"><div class="step-title">9) Programa</div>Ejecute: <b>python3 eap.py</b></div>
-    <div class="step-box"><div class="step-title">10) Medición</div>Mantenga 15 segundos de registro.</div>
-    <div class="step-box"><div class="step-title">11) Finalizar</div>Use el botón Detener.</div>
-    <div class="step-box"><div class="step-title">12) Confirmar</div>Pulse OK cuando se suban los datos.</div>
-  </div>
 </div>
 
 <script>
-const SAMPLE_RATE = 200;
+
+const URL = "https://practicumii-a9956-default-rtdb.firebaseio.com/ad7606.json";
+
+let charts = {}; // Para destruir y regenerar
 
 function toggleMenu() {
-  document.getElementById('sideMenu').classList.toggle('open');
+  document.getElementById("menu").classList.toggle("open");
 }
 
 function showPanel(id) {
-  document.querySelectorAll('.panel').forEach(p => p.style.display = 'none');
-  document.getElementById(id).style.display = 'block';
-  document.getElementById('sideMenu').classList.remove('open');
+  document.querySelectorAll(".panel").forEach(p => p.style.display = "none");
+  document.getElementById(id).style.display = "block";
+  document.getElementById("menu").classList.remove("open");
 }
 
 async function loadData() {
   try {
-    const res = await
+    const res = await fetch(URL);
+    const data = await res.json();
+    if (!data) return;
+
+    plotAll(data);
+    plotECG(data);
+    plotPPG(data);
+    plotComparisons(data);
+
+  } catch (e) {
+    console.log("Error cargando datos", e);
+  }
+}
+
+function destroy(id) {
+  if (charts[id]) charts[id].destroy();
+}
+
+function createChart(id, label, color, data) {
+  destroy(id);
+  const ctx = document.getElementById(id).getContext("2d");
+
+  charts[id] = new Chart(ctx, {
+    type: "line",
+    data: {
+      datasets: [{
+        label: label,
+        data: data,
+        borderColor: color,
+        fill: false,
+        tension: 0.2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { title: { display: true, text: "Muestras" } },
+        y: { title: { display: true, text: "Voltaje (V)" } }
+      }
+    }
+  });
+}
+
+/* --- PLOTS --- */
+
+function plotAll(d) {
+  createChart("ecg_all", "ECG", "red", d.CH1);
+  createChart("ppg1_all", "PPG Índice Izq", "red", d.CH2);
+  createChart("ppg2_all", "PPG Índice Der", "red", d.CH3);
+  createChart("ppg3_all", "PPG Hallux Izq", "red", d.CH4);
+  createChart("ppg4_all", "PPG Hallux Der", "red", d.CH5);
+}
+
+function plotECG(d) {
+  createChart("ecgChart", "ECG", "red", d.CH1);
+}
+
+function plotPPG(d) {
+  createChart("ppg1", "Índice Izq", "red", d.CH2);
+  createChart("ppg2", "Índice Der", "red", d.CH3);
+  createChart("ppg3", "Hallux Izq", "red", d.CH4);
+  createChart("ppg4", "Hallux Der", "red", d.CH5);
+}
+
+function plotComparisons(d) {
+  destroy("comp_indices");
+  destroy("comp_hallux");
+
+  charts["comp_indices"] = new Chart(
+    document.getElementById("comp_indices").getContext("2d"),
+    {
+      type: "line",
+      data: {
+        datasets: [
+          { label: "Índice Izq", data: d.CH2, borderColor: "red", fill: false },
+          { label: "Índice Der", data: d.CH3, borderColor: "blue", fill: false }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: { y: { title: { display: true, text: "Voltaje (V)" } } }
+      }
+    }
+  );
+
+  charts["comp_hallux"] = new Chart(
+    document.getElementById("comp_hallux").getContext("2d"),
+    {
+      type: "line",
+      data: {
+        datasets: [
+          { label: "Hallux Izq", data: d.CH4, borderColor: "red", fill: false },
+          { label: "Hallux Der", data: d.CH5, borderColor: "blue", fill: false }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: { y: { title: { display: true, text: "Voltaje (V)" } } }
+      }
+    }
+  );
+}
+
+loadData();
+setInterval(loadData, 4000);
+
+</script>
+
+</body>
+</html>
