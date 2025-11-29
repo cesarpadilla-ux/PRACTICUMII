@@ -100,39 +100,65 @@ function showPanel(id) {
 }
 
 async function loadData() {
-  const res = await fetch('https://practicumii-a9956-default-rtdb.firebaseio.com/ad7606.json');
-  const data = await res.json();
+  try {
+    const res = await fetch('https://practicumii-a9956-default-rtdb.firebaseio.com/ad7606.json');
+    const data = await res.json();
 
-  const lastTime = new Date().toLocaleString('es-MX', { timeZone: 'America/Mexico_City' });
-  document.getElementById('lastUpdate').innerText = `Última actualización: ${lastTime}`;
+    const t = data.CH1.map((v, i) => i * (1 / SAMPLE_RATE));
 
-  const t = data.CH1.map((v,i)=> i * (1/SAMPLE_RATE));
+    plot('ecgChart', t, data.CH1, 'ECG', 'red');
+    plot('ppg1', t, data.CH2, 'PPG Índice Izquierdo', 'red');
+    plot('ppg2', t, data.CH3, 'PPG Índice Derecho', 'red');
+    plot('ppg3', t, data.CH4, 'PPG Hallux Izquierdo', 'red');
+    plot('ppg4', t, data.CH5, 'PPG Hallux Derecho', 'red');
 
-  plot('ecgChart', t, data.CH1, 'ECG');
-  plot('ppg1', t, data.CH2, 'PPG Índice Izquierdo');
-  plot('ppg2', t, data.CH3, 'PPG Índice Derecho');
-  plot('ppg3', t, data.CH4, 'PPG Hallux Izquierdo');
-  plot('ppg4', t, data.CH5, 'PPG Hallux Derecho');
-
-  compare('compareManos', t, data.CH2, data.CH3, 'Índice Izq', 'Índice Der');
-  compare('comparePies', t, data.CH4, data.CH5, 'Hallux Izq', 'Hallux Der');
+    compare('compareManos', t, data.CH2, data.CH3, 'Índice Izq', 'Índice Der');
+    compare('comparePies', t, data.CH4, data.CH5, 'Hallux Izq', 'Hallux Der');
+  } catch (e) {
+    console.error('Error cargando datos', e);
+  }
 }
 
-function plot(canvasId, x, y, label) {
-  /* FIX REMOVED FOR REINSERTION */ new Chart(document.getElementById(canvasId), {
+function plot(canvasId, x, y, label, color) {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  new Chart(ctx, {
     type: 'line',
-    data: { labels: x, datasets: [{ label, data: y, borderWidth: 1, borderColor: 'red' }] },
-    options: { responsive: true, scales: { x: { title: {display:true, text:'Tiempo (s)'} }, y:{} } }
+    data: {
+      labels: x,
+      datasets: [{ label, data: y, borderWidth: 1, borderColor: color }]
+    },
+    options: {
+      animation: false,
+      responsive: true,
+      scales: {
+        x: { title: { display: true, text: 'Tiempo (s)' } },
+        y: {}
+      }
+    }
   });
 }
 
 function compare(canvasId, x, y1, y2, l1, l2) {
-  /* FIX REMOVED FOR REINSERTION */ new Chart(document.getElementById(canvasId), {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  new Chart(ctx, {
     type: 'line',
-    data: { labels: x, datasets: [ { label: l1, data: y1, borderWidth: 1, borderColor: 'blue' }, { label: l2, data: y2, borderWidth: 1, borderColor: 'green' } ], data: y1, borderWidth: 1 },
-      { label: l2, data: y2, borderWidth: 1 }
-    ]},
-    options: { responsive: true, scales: { x: { title:{display:true,text:'Tiempo (s)'} }, y:{} } }
+    data: {
+      labels: x,
+      datasets: [
+        { label: l1, data: y1, borderWidth: 1, borderColor: '#0066ff' },
+        { label: l2, data: y2, borderWidth: 1, borderColor: '#00aa44' }
+      ]
+    },
+    options: {
+      animation: false,
+      responsive: true,
+      scales: {
+        x: { title: { display: true, text: 'Tiempo (s)' } },
+        y: {}
+      }
+    }
   });
 }
 
