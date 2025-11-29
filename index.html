@@ -104,10 +104,17 @@
   
   h2 { margin-top: 0; font-size: 1.2rem; text-align: center; color: #333; }
 
-  /* Contenedor relativo para canvas para evitar que se aplaste */
+  /* Contenedor relativo para canvas ESTÁNDAR (para vistas con muchas gráficas) */
   .chart-container {
     position: relative;
-    height: 300px; /* Altura fija base para evitar aplastamiento */
+    height: 300px; 
+    width: 100%;
+  }
+
+  /* NUEVO: Contenedor para gráficas GRANDES (para vistas individuales o duales) */
+  .chart-container-large {
+    position: relative;
+    height: 500px; /* Mucho más espacio vertical */
     width: 100%;
   }
 
@@ -152,7 +159,12 @@
     }
 
     .chart-container {
-      height: 250px; /* Un poco más pequeño en móvil pero consistente */
+      height: 250px; 
+    }
+    
+    /* Ajuste de gráfica grande en móvil */
+    .chart-container-large {
+      height: 350px; 
     }
   }
 </style>
@@ -200,57 +212,59 @@
       <div class="step-box"><div class="step-title">12) Refrescar</div>Actualice esta página para ver los nuevos datos.</div>
     </div>
 
-    <!-- Panel ECG -->
+    <!-- Panel ECG (GRANDE) -->
     <div id="ecg" class="panel" style="display:none;">
       <div class="card">
         <h2>Señal ECG</h2>
-        <div class="chart-container"><canvas id="ecgChart"></canvas></div>
+        <!-- Usamos chart-container-large -->
+        <div class="chart-container-large"><canvas id="ecgChart"></canvas></div>
       </div>
     </div>
 
-    <!-- Panel PPG Manos -->
+    <!-- Panel PPG Manos (GRANDE) -->
     <div id="ppg_manos" class="panel" style="display:none;">
       <div class="card">
         <h2>PPG Índice Izquierdo</h2>
-        <div class="chart-container"><canvas id="ppg1"></canvas></div>
+        <div class="chart-container-large"><canvas id="ppg1"></canvas></div>
       </div>
       <div class="card">
         <h2>PPG Índice Derecho</h2>
-        <div class="chart-container"><canvas id="ppg2"></canvas></div>
+        <div class="chart-container-large"><canvas id="ppg2"></canvas></div>
       </div>
     </div>
 
-    <!-- Panel PPG Pies -->
+    <!-- Panel PPG Pies (GRANDE) -->
     <div id="ppg_pies" class="panel" style="display:none;">
       <div class="card">
         <h2>PPG Hallux Izquierdo</h2>
-        <div class="chart-container"><canvas id="ppg3"></canvas></div>
+        <div class="chart-container-large"><canvas id="ppg3"></canvas></div>
       </div>
       <div class="card">
         <h2>PPG Hallux Derecho</h2>
-        <div class="chart-container"><canvas id="ppg4"></canvas></div>
+        <div class="chart-container-large"><canvas id="ppg4"></canvas></div>
       </div>
     </div>
 
-    <!-- Panel Comparación Manos -->
+    <!-- Panel Comparación Manos (GRANDE) -->
     <div id="comp_manos" class="panel" style="display:none;">
       <div class="card">
         <h2>Comparativa: Manos (Izq vs Der)</h2>
-        <div class="chart-container"><canvas id="compareManos"></canvas></div>
+        <div class="chart-container-large"><canvas id="compareManos"></canvas></div>
       </div>
     </div>
 
-    <!-- Panel Comparación Pies -->
+    <!-- Panel Comparación Pies (GRANDE) -->
     <div id="comp_pies" class="panel" style="display:none;">
       <div class="card">
         <h2>Comparativa: Pies (Izq vs Der)</h2>
-        <div class="chart-container"><canvas id="comparePies"></canvas></div>
+        <div class="chart-container-large"><canvas id="comparePies"></canvas></div>
       </div>
     </div>
 
-    <!-- Panel TODOS (ECG + PPG) -->
+    <!-- Panel TODOS (Estándar, muchas gráficas) -->
     <div id="all_view" class="panel" style="display:none;">
       <h2 style="margin-bottom:20px;"> Vista de Todas las Señales</h2>
+      <!-- Mantenemos chart-container normal -->
       <div class="card"><h2>ECG</h2><div class="chart-container"><canvas id="all_c1"></canvas></div></div>
       <div class="card"><h2>PPG Índice Izq</h2><div class="chart-container"><canvas id="all_c2"></canvas></div></div>
       <div class="card"><h2>PPG Índice Der</h2><div class="chart-container"><canvas id="all_c3"></canvas></div></div>
@@ -258,7 +272,7 @@
       <div class="card"><h2>PPG Hallux Der</h2><div class="chart-container"><canvas id="all_c5"></canvas></div></div>
     </div>
 
-    <!-- Panel SOLO PPG -->
+    <!-- Panel SOLO PPG (Estándar, muchas gráficas) -->
     <div id="ppg_view" class="panel" style="display:none;">
       <h2 style="margin-bottom:20px;">Vista de Todos los PPG </h2>
       <div class="card"><h2>PPG Índice Izq</h2><div class="chart-container"><canvas id="ppg_only_c2"></canvas></div></div>
