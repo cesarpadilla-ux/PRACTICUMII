@@ -119,18 +119,17 @@ async function loadData() {
 }
 
 function plot(canvasId, x, y, label) {
-  new Chart(document.getElementById(canvasId), {
+  /* FIX REMOVED FOR REINSERTION */ new Chart(document.getElementById(canvasId), {
     type: 'line',
-    data: { labels: x, datasets: [{ label, data: y, borderWidth: 1 }] },
+    data: { labels: x, datasets: [{ label, data: y, borderWidth: 1, borderColor: 'red' }] },
     options: { responsive: true, scales: { x: { title: {display:true, text:'Tiempo (s)'} }, y:{} } }
   });
 }
 
 function compare(canvasId, x, y1, y2, l1, l2) {
-  new Chart(document.getElementById(canvasId), {
+  /* FIX REMOVED FOR REINSERTION */ new Chart(document.getElementById(canvasId), {
     type: 'line',
-    data: { labels: x, datasets: [
-      { label: l1, data: y1, borderWidth: 1 },
+    data: { labels: x, datasets: [ { label: l1, data: y1, borderWidth: 1, borderColor: 'blue' }, { label: l2, data: y2, borderWidth: 1, borderColor: 'green' } ], data: y1, borderWidth: 1 },
       { label: l2, data: y2, borderWidth: 1 }
     ]},
     options: { responsive: true, scales: { x: { title:{display:true,text:'Tiempo (s)'} }, y:{} } }
