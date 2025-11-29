@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Menú de Señales</title>
+<title>Visor EAP — ECG · PPG · AD7606</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
@@ -12,18 +12,36 @@
         background: white;
     }
 
-    .container {
-        display: flex;
-        height: 100vh;
+    .header {
+        padding: 20px;
+        text-align: center;
+        background: white;
+        border-bottom: 1px solid #ddd;
     }
 
-    /* PANEL LATERAL */
+    .header h1 {
+        margin: 0;
+        font-size: 28px;
+        font-weight: bold;
+    }
+
+    .header p {
+        margin: 5px 0 0 0;
+        font-size: 16px;
+        color: #444;
+    }
+
+    .container {
+        display: flex;
+        height: calc(100vh - 110px);
+    }
+
     .sidebar {
         width: 260px;
         background: #f5f5f5;
         border-right: 1px solid #ddd;
         padding: 20px;
-        box-sizing: border-box;
+        overflow-y: auto;
     }
 
     .sidebar h2 {
@@ -48,11 +66,11 @@
         background: #d8d8d8;
     }
 
-    /* CONTENIDO */
     .content {
         flex: 1;
         padding: 20px;
         overflow-y: auto;
+        background: white;
     }
 
     h3 {
@@ -65,16 +83,17 @@
         margin: 20px auto;
         border: 1px solid #ccc;
         width: 95%;
-        height: 250px;
+        max-width: 900px;
+        height: 260px;
     }
 
-    /* TARJETA DE INSTRUCCIONES */
+    /* Instrucciones */
     .card {
-        max-width: 800px;
+        max-width: 900px;
         margin: 30px auto;
         padding: 25px;
         border-radius: 10px;
-        background: #fafafa;
+        background: white;
         border: 1px solid #ddd;
         line-height: 1.6;
         font-size: 17px;
@@ -88,12 +107,20 @@
     .card li {
         margin-bottom: 10px;
     }
+
 </style>
 </head>
+
 <body>
 
+<div class="header">
+    <h1>Visor EAP — ECG · PPG · AD7606</h1>
+    <p>Últimas señales cargadas desde la Raspberry. Sample rate utilizado: 200 Hz.</p>
+    <p id="timestamp" style="font-size:14px;color:#666;margin-top:3px;"></p>
+</div>
+
 <div class="container">
-    <!-- SIDEBAR -->
+
     <div class="sidebar">
         <h2>Menú de Señales</h2>
 
@@ -117,34 +144,33 @@
         </div>
     </div>
 
-    <!-- CONTENIDO -->
-    <div class="content" id="content">
+    <div class="content">
 
-        <!-- VENTANA: INSTRUCCIONES -->
+        <!-- INSTRUCCIONES -->
         <div id="instrucciones" class="window">
             <div class="card">
                 <h2>Instrucciones de Uso del Dispositivo</h2>
                 <ol>
                     <li>Conecte el dispositivo a un enchufe eléctrico.</li>
                     <li>Encienda el dispositivo con el switch de baterías y el switch de alimentación.</li>
-                    <li>Conecte el dispositivo a un monitor por HDMI y conecte un mouse y teclado por USB.</li>
+                    <li>Conecte el dispositivo a un monitor mediante cable HDMI y conecte un mouse y teclado por USB.</li>
                     <li>Espere a que aparezca la interfaz del sistema.</li>
                     <li>Ingrese al icono de Wi-Fi en la esquina superior derecha y conéctese a una red.</li>
-                    <li>Si no hay Wi-Fi disponible, conecte un cable LAN al puerto correspondiente.</li>
+                    <li>Si no hay Wi-Fi disponible, conecte un cable LAN en el puerto correspondiente.</li>
                     <li>Abra la terminal en la esquina superior izquierda.</li>
                     <li>Escriba el comando: <b>cd/Desktop/EAP</b></li>
                     <li>Prepare al paciente y coloque electrodos/dedales según el manual.</li>
                     <li>Ejecute el comando: <b>python3 eap.py</b></li>
-                    <li>Espere al menos 15 segundos mientras se toman los datos.</li>
-                    <li>Detenga la toma de datos con el botón Detener.</li>
-                    <li>Presione “Ok” cuando aparezca la confirmación de subida a la nube.</li>
+                    <li>Espere al menos 15 segundos para adquirir datos suficientes.</li>
+                    <li>Detenga la toma con el botón “Detener”.</li>
+                    <li>Presione “Ok” cuando aparezca la confirmación de subida de datos.</li>
                     <li>Si aparece un error, verifique la conexión a internet.</li>
-                    <li>Recargue esta página web para visualizar los nuevos datos.</li>
+                    <li>Recargue esta página web para visualizar nuevas mediciones.</li>
                 </ol>
             </div>
         </div>
 
-        <!-- VENTANA: ECG + PPG -->
+        <!-- VENTANAS DE GRÁFICAS -->
         <div id="ecg_ppg" class="window" style="display:none;">
             <h3>ECG y PPG</h3>
             <canvas id="ch1"></canvas>
@@ -154,13 +180,11 @@
             <canvas id="ch5"></canvas>
         </div>
 
-        <!-- VENTANA: ECG -->
         <div id="ecg" class="window" style="display:none;">
             <h3>ECG</h3>
             <canvas id="ch1_ecg"></canvas>
         </div>
 
-        <!-- VENTANA: PPG -->
         <div id="ppg" class="window" style="display:none;">
             <h3>PPG</h3>
             <canvas id="ch2_ppg"></canvas>
@@ -169,29 +193,25 @@
             <canvas id="ch5_ppg"></canvas>
         </div>
 
-        <!-- VENTANA: PPG MANOS -->
         <div id="ppg_manos" class="window" style="display:none;">
             <h3>PPG de Manos</h3>
             <canvas id="ch2_manos"></canvas>
             <canvas id="ch3_manos"></canvas>
         </div>
 
-        <!-- VENTANA: PPG PIES -->
         <div id="ppg_pies" class="window" style="display:none;">
             <h3>PPG de Pies</h3>
             <canvas id="ch4_pies"></canvas>
             <canvas id="ch5_pies"></canvas>
         </div>
-
     </div>
 </div>
 
-<!-- SCRIPT -->
 <script>
 const FIREBASE_URL = "https://practicumii-a9956-default-rtdb.firebaseio.com/ad7606.json";
+const SAMPLE_RATE = 200;
 
-const SAMPLE_RATE = 200; // Hz
-const CHANNEL_LABELS = [
+const LABELS = [
     "Canal 1 - ECG",
     "Canal 2 - PPG Índice Izquierdo",
     "Canal 3 - PPG Índice Derecho",
@@ -199,74 +219,91 @@ const CHANNEL_LABELS = [
     "Canal 5 - PPG Hallux Derecho"
 ];
 
+let charts = {};
+
+// ----------------------
+//   FETCH DE SEÑALES
+// ----------------------
 async function fetchData() {
-    const res = await fetch(FIREBASE_URL);
+    const res = await fetch(FIREBASE_URL + "?t=" + Date.now());
     return await res.json();
 }
 
-function generateTimeAxis(length) {
-    return Array.from({ length }, (_, i) => i / SAMPLE_RATE);
+function tiempoMexico() {
+    return new Date().toLocaleString("es-MX", { timeZone: "America/Mexico_City" });
 }
 
-function plot(canvasId, data, label, color) {
-    const ctx = document.getElementById(canvasId).getContext("2d");
-    new Chart(ctx, {
+// ----------------------
+//   PLOT
+// ----------------------
+function generarTiempo(n) {
+    return Array.from({ length: n }, (_, i) => i / SAMPLE_RATE);
+}
+
+function plot(id, data, label) {
+    const ctx = document.getElementById(id).getContext("2d");
+
+    if (charts[id]) charts[id].destroy();
+
+    charts[id] = new Chart(ctx, {
         type: "line",
         data: {
-            labels: generateTimeAxis(data.length),
+            labels: generarTiempo(data.length),
             datasets: [{
                 label,
                 data,
-                borderColor: color,
-                borderWidth: 1,
-                tension: 0.2
+                borderColor: "black",
+                borderWidth: 1
             }]
         },
         options: {
-            responsive: true,
             animation: false,
+            responsive: true,
             scales: {
-                x: { title: { display: true, text: "Tiempo (s)" } },
-                y: { title: { display: true, text: "Voltaje (V)" } }
+                x: { title: { display: true, text: "Tiempo (s)" }},
+                y: { title: { display: true, text: "Voltaje (V)" }}
             }
         }
     });
 }
 
-async function renderAll() {
-    const data = await fetchData();
+// ----------------------
+//  RENDER DE TODO
+// ----------------------
+async function render() {
+    const d = await fetchData();
 
-    // ECG + PPG
-    plot("ch1", data.CH1, CHANNEL_LABELS[0], "red");
-    plot("ch2", data.CH2, CHANNEL_LABELS[1], "blue");
-    plot("ch3", data.CH3, CHANNEL_LABELS[2], "green");
-    plot("ch4", data.CH4, CHANNEL_LABELS[3], "orange");
-    plot("ch5", data.CH5, CHANNEL_LABELS[4], "purple");
+    document.getElementById("timestamp").innerText =
+        "Última actualización: " + tiempoMexico();
 
-    // ECG
-    plot("ch1_ecg", data.CH1, CHANNEL_LABELS[0], "red");
+    plot("ch1", d.CH1, LABELS[0]);
+    plot("ch2", d.CH2, LABELS[1]);
+    plot("ch3", d.CH3, LABELS[2]);
+    plot("ch4", d.CH4, LABELS[3]);
+    plot("ch5", d.CH5, LABELS[4]);
 
-    // PPG
-    plot("ch2_ppg", data.CH2, CHANNEL_LABELS[1], "blue");
-    plot("ch3_ppg", data.CH3, CHANNEL_LABELS[2], "green");
-    plot("ch4_ppg", data.CH4, CHANNEL_LABELS[3], "orange");
-    plot("ch5_ppg", data.CH5, CHANNEL_LABELS[4], "purple");
+    plot("ch1_ecg", d.CH1, LABELS[0]);
 
-    // PPG manos
-    plot("ch2_manos", data.CH2, CHANNEL_LABELS[1], "blue");
-    plot("ch3_manos", data.CH3, CHANNEL_LABELS[2], "green");
+    plot("ch2_ppg", d.CH2, LABELS[1]);
+    plot("ch3_ppg", d.CH3, LABELS[2]);
+    plot("ch4_ppg", d.CH4, LABELS[3]);
+    plot("ch5_ppg", d.CH5, LABELS[4]);
 
-    // PPG pies
-    plot("ch4_pies", data.CH4, CHANNEL_LABELS[3], "orange");
-    plot("ch5_pies", data.CH5, CHANNEL_LABELS[4], "purple");
+    plot("ch2_manos", d.CH2, LABELS[1]);
+    plot("ch3_manos", d.CH3, LABELS[2]);
+
+    plot("ch4_pies", d.CH4, LABELS[3]);
+    plot("ch5_pies", d.CH5, LABELS[4]);
 }
 
-renderAll();
+render();
 
-// Control de ventanas
+// CONTROL DE VENTANAS
 function showWindow(id) {
     document.querySelectorAll(".window").forEach(w => w.style.display = "none");
     document.getElementById(id).style.display = "block";
+
+    setTimeout(() => render(), 300);
 }
 </script>
 
