@@ -114,6 +114,13 @@ async function loadData() {
 
     compare('compareManos', t, data.CH2, data.CH3, 'Índice Izq', 'Índice Der');
     compare('comparePies', t, data.CH4, data.CH5, 'Hallux Izq', 'Hallux Der');
+
+    // Gráficas del panel "todo"
+    plot('ecgChart_all', t, data.CH1, 'ECG', 'red');
+    plot('ppg1_all', t, data.CH2, 'PPG Índice Izquierdo', 'red');
+    plot('ppg2_all', t, data.CH3, 'PPG Índice Derecho', 'red');
+    plot('ppg3_all', t, data.CH4, 'PPG Hallux Izquierdo', 'red');
+    plot('ppg4_all', t, data.CH5, 'PPG Hallux Derecho', 'red');;
   } catch (e) {
     console.error('Error cargando datos', e);
   }
@@ -133,7 +140,7 @@ function plot(canvasId, x, y, label, color) {
       responsive: true,
       scales: {
         x: { title: { display: true, text: 'Tiempo (s)' } },
-        y: {}
+        y: { title: { display: true, text: 'Voltaje (V)' } }
       }
     }
   });
@@ -156,7 +163,7 @@ function compare(canvasId, x, y1, y2, l1, l2) {
       responsive: true,
       scales: {
         x: { title: { display: true, text: 'Tiempo (s)' } },
-        y: {}
+        y: { title: { display: true, text: 'Voltaje (V)' } }
       }
     }
   });
@@ -167,54 +174,3 @@ loadData();
 
 </body>
 </html>
-
-// --- PANEL ECG Y PPG (AGREGADO) ---
-async function loadAllECGPPG() {
-  const data = await getAD7606();
-  if (!data) return;
-
-  const labels = data.time || data.ecg?.map((_, i) => i) || [];
-
-  const container = document.getElementById("panelBoth");
-  if (!container) return;
-  container.innerHTML = `<canvas id="chartAllECGPPG" height="120"></canvas>`;
-
-  const ctx = document.getElementById("chartAllECGPPG").getContext("2d");
-
-  const colors = ["red", "blue", "green", "purple", "orange", "brown", "teal", "magenta"]; 
-  const datasets = [];
-  let index = 0;
-
-  for (const key in data) {
-    if (key.toLowerCase().includes("ecg") || key.toLowerCase().includes("ppg")) {
-      datasets.push({
-        label: key.toUpperCase(),
-        data: data[key],
-        borderColor: colors[index % colors.length],
-        borderWidth: 1,
-        fill: false,
-      });
-      index++;
-    }
-  }
-
-  new Chart(ctx, {
-    type: "line",
-    data: {
-      labels,
-      datasets,
-    },
-    options: {
-      responsive: true,
-      scales: {
-        y: {
-          title: {
-            display: true,
-            text: "Voltaje (V)",
-          }
-        }
-      }
-    }
-  });
-}
-// --- FIN PANEL ECG Y PPG ---
