@@ -1,190 +1,212 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visor ECG / PPG</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Señales ECG / PPG</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  body { background: #ffffff; font-family: Arial, sans-serif; margin: 0; }
 
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-            overflow-x: hidden;
-        }
+  /* 🔧 CENTRAR TÍTULO */
+  header { 
+    background: #0d0d0d; 
+    color: white; 
+    padding: 16px 22px; 
+    font-size: 24px; 
+    font-weight: bold;
+    text-align: center; /* ← título centrado */
+  }
 
-        /* BOTÓN DEL MENÚ */
-        .menu-btn {
-            position: fixed;
-            top: 15px;
-            left: 15px;
-            z-index: 1001;
-            font-size: 30px;
-            background: white;
-            border: 2px solid #333;
-            padding: 5px 10px;
-            border-radius: 8px;
-            cursor: pointer;
-        }
+  .menu-toggle {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    background: #0d0d0d;
+    color: white;
+    border: none;
+    font-size: 22px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    z-index: 2000;
+  }
 
-        /* MENÚ LATERAL */
-        .sidebar {
-            width: 240px;
-            height: 100%;
-            background: #222;
-            color: white;
-            padding-top: 60px;
-            position: fixed;
-            top: 0;
-            left: 0;
-            transition: transform 0.3s ease-in-out;
-            z-index: 1000;
-        }
+  .menu {
+    width: 260px;
+    background: #f1f1f1;
+    height: 100vh;
+    padding: 20px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    border-right: 2px solid #ddd;
+    overflow-y: auto;
+    transform: translateX(-280px);
+    transition: 0.3s ease;
+    z-index: 1500;
+  }
 
-        .sidebar.hidden {
-            transform: translateX(-260px);
-        }
+  .menu.open { transform: translateX(0); }
 
-        .sidebar ul {
-            list-style: none;
-            padding: 0;
-        }
+  .menu h3 { margin-top: 60px; }
 
-        .sidebar li {
-            padding: 15px;
-            cursor: pointer;
-            border-bottom: 1px solid #444;
-        }
+  .menu button {
+    width: 100%; padding: 10px; margin-bottom: 10px;
+    border: none; background: #e0e0e0;
+    cursor: pointer; font-size: 15px;
+    border-radius: 6px;
+  }
 
-        .sidebar li:hover {
-            background: #444;
-        }
+  .menu button:hover { background: #cfcfcf; }
 
-        /* CONTENIDO */
-        #content {
-            margin-left: 0;
-            padding: 20px;
-        }
+  .content { padding: 22px; }
 
-        .titulo {
-            text-align: center;
-            margin-top: 60px;
-            font-size: 26px;
-            font-weight: bold;
-        }
+  .panel { width: 100%; max-width: 1000px; margin: auto; }
 
-        #grafica {
-            width: 95vw;
-            height: 60vh;
-            margin: auto;
-            max-width: 1200px;
-        }
-    </style>
+  .card {
+    background: #fafafa;
+    padding: 18px;
+    border-radius: 10px;
+    margin-bottom: 25px;
+    border: 1px solid #ddd;
+  }
 
-    <!-- Plotly -->
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  canvas { width: 100% !important; height: 260px !important; }
+
+  .step-box {
+    background: #ffffff;
+    padding: 16px;
+    border-radius: 10px;
+    border: 1px solid #bbb;
+    margin-bottom: 15px;
+  }
+
+  .step-title { font-size: 19px; font-weight: bold; }
+</style>
 </head>
-
 <body>
 
-    <!-- BOTÓN PARA MOSTRAR EL MENÚ -->
-    <button id="menu-toggle" class="menu-btn">☰</button>
+<button class="menu-toggle" onclick="toggleMenu()">☰</button>
 
-    <!-- MENÚ LATERAL -->
-    <nav id="sidebar" class="sidebar hidden">
-        <h2 style="text-align:center;">Opciones</h2>
-        <ul>
-            <li onclick="mostrarECG()">ECG</li>
-            <li onclick="mostrarPPG1()">PPG 1</li>
-            <li onclick="mostrarPPG2()">PPG 2</li>
-            <li onclick="mostrarPPG3()">PPG 3</li>
-            <li onclick="mostrarPPG4()">PPG 4</li>
-        </ul>
-    </nav>
+<!-- 🔧 EL TÍTULO YA SE VE CENTRADO -->
+<header>Visor Señales ECG / PPG</header>
 
-    <!-- CONTENIDO PRINCIPAL -->
-    <main id="content">
+<div class="menu" id="sideMenu">
+  <h3>Menú de Señales</h3>
 
-        <h1 class="titulo">Visor Señales ECG / PPG</h1>
+  <button onclick="showPanel('instrucciones')">Instrucciones</button>
+  <button onclick="showPanel('todo')">ECG y PPG</button>
+  <button onclick="showPanel('ecg')">ECG</button>
+  <button onclick="showPanel('ppg_manos')">PPG Manos</button>
+  <button onclick="showPanel('ppg_pies')">PPG Pies</button>
+  <button onclick="showPanel('comparacion')">Comparación</button>
+</div>
 
-        <div id="grafica"></div>
+<div class="content">
 
-    </main>
+  <div id="todo" class="panel" style="display:none;">
+    <div class="card"><h2>ECG</h2><canvas id="ecg_all"></canvas></div>
+    <div class="card"><h2>PPG Índice Izquierdo</h2><canvas id="ppg1_all"></canvas></div>
+    <div class="card"><h2>PPG Índice Derecho</h2><canvas id="ppg2_all"></canvas></div>
+    <div class="card"><h2>PPG Hallux Izquierdo</h2><canvas id="ppg3_all"></canvas></div>
+    <div class="card"><h2>PPG Hallux Derecho</h2><canvas id="ppg4_all"></canvas></div>
+  </div>
 
-    <script>
-        const sidebar = document.getElementById("sidebar");
-        const toggleBtn = document.getElementById("menu-toggle");
+  <div id="ecg" class="panel">
+    <div class="card"><h2>ECG</h2><canvas id="ecgChart"></canvas></div>
+  </div>
 
-        // ABRIR / CERRAR MENÚ
-        toggleBtn.addEventListener("click", () => {
-            sidebar.classList.toggle("hidden");
-        });
+  <div id="ppg_manos" class="panel" style="display:none;">
+    <div class="card"><h2>PPG Índice Izquierdo</h2><canvas id="ppg1"></canvas></div>
+    <div class="card"><h2>PPG Índice Derecho</h2><canvas id="ppg2"></canvas></div>
+  </div>
 
-        // GENERAR GRÁFICA VACÍA
-        Plotly.newPlot("grafica", [{
-            x: [],
-            y: [],
-            mode: "lines",
-            line: { width: 2 }
-        }], {
-            title: "Selecciona una señal en el menú",
-            responsive: true
-        });
+  <div id="ppg_pies" class="panel" style="display:none;">
+    <div class="card"><h2>PPG Hallux Izquierdo</h2><canvas id="ppg3"></canvas></div>
+    <div class="card"><h2>PPG Hallux Derecho</h2><canvas id="ppg4"></canvas></div>
+  </div>
 
-        // FUNCIÓN GENERAL PARA DIBUJAR
-        function graficar(x, y, titulo) {
-            Plotly.react("grafica", [{
-                x: x,
-                y: y,
-                mode: "lines",
-                line: { width: 2 }
-            }], {
-                title: titulo,
-                responsive: true,
-                hovermode: "closest"  // ← muestra X,Y al pasar el mouse
-            });
-        }
+  <div id="comparacion" class="panel" style="display:none;">
+    <div class="card"><h2>Comparación — Índices</h2><canvas id="comp_indices"></canvas></div>
+    <div class="card"><h2>Comparación — Hallux</h2><canvas id="comp_hallux"></canvas></div>
+  </div>
 
-        // ----------------------------
-        // GENERADOR DE DATOS DE EJEMPLO
-        // ----------------------------
-        function generarDatos() {
-            let x = [], y = [];
-            for (let i = 0; i < 500; i++) {
-                x.push(i);
-                y.push(Math.sin(i / 20) + (Math.random() - 0.5) * 0.1);
-            }
-            return { x, y };
-        }
+  <!-- INSTRUCCIONES (SIN CAMBIOS) -->
+  <div id="instrucciones" class="panel" style="display:none;">
+    <h2>Instrucciones del Dispositivo</h2>
 
-        // ----------------------------
-        // OPCIONES DEL MENÚ
-        // ----------------------------
-        function mostrarECG() {
-            let d = generarDatos();
-            graficar(d.x, d.y, "ECG");
-        }
+    <div class="step-box"><div class="step-title">1) Encendido</div>Encienda el dispositivo utilizando el switch de baterías y el switch de alimentación.</div>
+    <div class="step-box"><div class="step-title">2) Conexiones</div>Conecte el dispositivo a un monitor mediante cable HDMI y conecte un mouse y teclado en los puertos USB.</div>
+    <div class="step-box"><div class="step-title">3) Inicio del sistema</div>Espere a que el dispositivo muestre la interfaz.</div>
+    <div class="step-box"><div class="step-title">4) Conexión a internet</div>Ingrese al ícono de WiFi en la esquina superior derecha y conéctese a una red.</div>
+    <div class="step-box"><div class="step-title">4.1) Opción cableada</div>Si no cuenta con red WiFi, conecte un cable LAN al puerto junto al USB de la Raspberry Pi.</div>
+    <div class="step-box"><div class="step-title">5) Abrir la terminal</div>Abra la terminal ubicada en la parte superior izquierda.</div>
+    <div class="step-box"><div class="step-title">6) Seleccionar carpeta</div>Ejecute: <b>cd Desktop/EAP</b></div>
+    <div class="step-box"><div class="step-title">7) Preparación del paciente</div>Coloque los electrodos ECG y sensores PPG.</div>
+    <div class="step-box"><div class="step-title">8) Ejecutar medición</div>Ejecute: <b>python3 eap.py</b></div>
+    <div class="step-box"><div class="step-title">9) Tiempo de registro</div>Deje correr al menos 15 segundos.</div>
+    <div class="step-box"><div class="step-title">10) Detener</div>Pulse el botón "Detener".</div>
+    <div class="step-box"><div class="step-title">11) Confirmación</div>Pulse "OK" cuando aparezca la subida correcta de archivos.</div>
+    <div class="step-box"><div class="step-title">11.1) Error</div>Si aparece error, revise la conexión a internet.</div>
+    <div class="step-box"><div class="step-title">12) Nueva medición</div>Refresque el sitio web para cada nueva toma.</div>
+  </div>
 
-        function mostrarPPG1() {
-            let d = generarDatos();
-            graficar(d.x, d.y, "PPG 1");
-        }
+</div>
 
-        function mostrarPPG2() {
-            let d = generarDatos();
-            graficar(d.x, d.y, "PPG 2");
-        }
+<script>
+function toggleMenu() {
+  document.getElementById('sideMenu').classList.toggle('open');
+}
 
-        function mostrarPPG3() {
-            let d = generarDatos();
-            graficar(d.x, d.y, "PPG 3");
-        }
+function showPanel(id) {
+  document.querySelectorAll('.panel').forEach(p => p.style.display = 'none');
+  document.getElementById(id).style.display = 'block';
+}
 
-        function mostrarPPG4() {
-            let d = generarDatos();
-            graficar(d.x, d.y, "PPG 4");
-        }
-    </script>
+//
+// ──────────────────────────────────────────
+// 🔧 GRAFICADOR BÁSICO PARA QUE SE VEAN
+// ──────────────────────────────────────────
+//
+
+function plotSignal(canvasId) {
+    const ctx = document.getElementById(canvasId).getContext('2d');
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: Array.from({length:100}, (_,i)=>i),
+            datasets: [{
+                label: 'Señal',
+                borderColor: 'red',
+                borderWidth: 1.5,
+                data: Array.from({length:100}, ()=> Math.random()*2-1),
+            }]
+        },
+        options: { responsive: true }
+    });
+}
+
+// 🔧 Dibujar cuando abres cada panel
+showPanel("ecg");   
+plotSignal("ecgChart");
+
+plotSignal("ppg1");
+plotSignal("ppg2");
+plotSignal("ppg3");
+plotSignal("ppg4");
+
+plotSignal("ecg_all");
+plotSignal("ppg1_all");
+plotSignal("ppg2_all");
+plotSignal("ppg3_all");
+plotSignal("ppg4_all");
+
+plotSignal("comp_indices");
+plotSignal("comp_hallux");
+
+</script>
 
 </body>
 </html>
