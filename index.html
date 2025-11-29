@@ -23,7 +23,7 @@
     padding: 15px; 
     font-size: 22px; 
     font-weight: bold; 
-    text-align: center; /* Centrado */
+    text-align: center; 
     position: fixed;
     top: 0;
     left: 0;
@@ -35,7 +35,7 @@
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
   }
 
-  /* Botón de menú (Hamburguesa) solo visible en móvil por defecto */
+  /* Botón de menú (Hamburguesa) */
   .menu-toggle {
     position: absolute;
     left: 20px;
@@ -44,13 +44,35 @@
     color: white;
     font-size: 24px;
     cursor: pointer;
-    display: none; /* Se activa con media query */
+    display: none; 
+  }
+
+  /* Botón de Descarga CSV a la derecha */
+  .csv-btn {
+    position: absolute;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.3);
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .csv-btn:hover {
+    background: white;
+    color: #0d0d0d;
   }
 
   /* --- Layout Principal --- */
   .main-container {
     display: flex;
-    margin-top: 60px; /* Espacio para el header fijo */
+    margin-top: 60px; 
     height: calc(100vh - 60px);
     width: 100%;
   }
@@ -100,21 +122,38 @@
     margin-bottom: 25px; 
     border: 1px solid #ddd; 
     box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    position: relative; /* Necesario para posicionar el botón de cámara */
   }
   
   h2 { margin-top: 0; font-size: 1.2rem; text-align: center; color: #333; }
 
-  /* Contenedor relativo para canvas ESTÁNDAR (para vistas con muchas gráficas) */
+  /* Botón de Cámara para capturar gráfica */
+  .camera-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: transparent;
+    border: none;
+    color: #888;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: color 0.2s;
+    z-index: 10;
+  }
+  .camera-btn:hover {
+    color: #0d0d0d;
+  }
+
+  /* Contenedores de gráficas */
   .chart-container {
     position: relative;
     height: 300px; 
     width: 100%;
   }
 
-  /* NUEVO: Contenedor para gráficas GRANDES (para vistas individuales o duales) */
   .chart-container-large {
     position: relative;
-    height: 500px; /* Mucho más espacio vertical */
+    height: 500px; 
     width: 100%;
   }
 
@@ -130,42 +169,34 @@
   .step-title { 
     font-size: 1.1rem; 
     font-weight: bold; 
-    color: #4caf50; /* Un toque de color para resaltar */
+    color: #4caf50; 
     margin-bottom: 5px; 
   }
 
   /* --- RESPONSIVIDAD (Móvil) --- */
   @media (max-width: 768px) {
-    .menu-toggle { display: block; } /* Mostrar botón menú */
+    .menu-toggle { display: block; } 
     
-    header { font-size: 18px; padding: 15px 0; }
+    header { font-size: 18px; padding: 15px 0; justify-content: center; }
+    .csv-btn { padding: 6px 10px; font-size: 12px; }
 
     .menu {
       position: fixed;
       left: 0;
-      top: 60px; /* Debajo del header */
+      top: 60px; 
       height: calc(100vh - 60px);
       z-index: 999;
-      transform: translateX(-100%); /* Oculto por defecto */
+      transform: translateX(-100%); 
       box-shadow: 2px 0 5px rgba(0,0,0,0.2);
     }
 
     .menu.open {
-      transform: translateX(0); /* Mostrar al abrir */
+      transform: translateX(0); 
     }
 
-    .content {
-      padding: 15px;
-    }
-
-    .chart-container {
-      height: 250px; 
-    }
-    
-    /* Ajuste de gráfica grande en móvil */
-    .chart-container-large {
-      height: 350px; 
-    }
+    .content { padding: 15px; }
+    .chart-container { height: 250px; }
+    .chart-container-large { height: 350px; }
   }
 </style>
 </head>
@@ -174,13 +205,14 @@
 <header>
   <button class="menu-toggle" onclick="toggleMenu()">☰</button>
   Visor de ECG / PPG
+  <!-- Botón CSV añadido -->
+  <button onclick="downloadCSV()" class="csv-btn">⬇ CSV</button>
 </header>
 
 <div class="main-container">
   <!-- Menú Lateral -->
   <div class="menu" id="sidebar">
     <h3>Menú</h3>
-    <!-- Instrucciones PRIMERO como solicitaste -->
     <button onclick="showPanel('instrucciones', this)" class="active">Instrucciones</button>
     <button onclick="showPanel('all_view', this)">ECG y PPG </button>
     <button onclick="showPanel('ecg', this)">ECG</button>
@@ -189,13 +221,12 @@
     <button onclick="showPanel('ppg_pies', this)">PPG Pies</button>
     <button onclick="showPanel('comp_manos', this)">Comparación Manos</button>
     <button onclick="showPanel('comp_pies', this)">Comparación Pies</button>
-    
   </div>
 
   <!-- Área de Contenido -->
   <div class="content">
     
-    <!-- Panel Instrucciones (Visible por defecto) -->
+    <!-- Panel Instrucciones -->
     <div id="instrucciones" class="panel">
       <h2>Instrucciones del Dispositivo</h2>
       <div class="step-box"><div class="step-title">1) Conectar alimentación</div>Conecte el dispositivo a un enchufe eléctrico.</div>
@@ -216,7 +247,7 @@
     <div id="ecg" class="panel" style="display:none;">
       <div class="card">
         <h2>Señal ECG</h2>
-        <!-- Usamos chart-container-large -->
+        <button class="camera-btn" onclick="downloadImage('ecgChart')" title="Descargar Gráfica">📷</button>
         <div class="chart-container-large"><canvas id="ecgChart"></canvas></div>
       </div>
     </div>
@@ -225,10 +256,12 @@
     <div id="ppg_manos" class="panel" style="display:none;">
       <div class="card">
         <h2>PPG Índice Izquierdo</h2>
+        <button class="camera-btn" onclick="downloadImage('ppg1')" title="Descargar Gráfica">📷</button>
         <div class="chart-container-large"><canvas id="ppg1"></canvas></div>
       </div>
       <div class="card">
         <h2>PPG Índice Derecho</h2>
+        <button class="camera-btn" onclick="downloadImage('ppg2')" title="Descargar Gráfica">📷</button>
         <div class="chart-container-large"><canvas id="ppg2"></canvas></div>
       </div>
     </div>
@@ -237,10 +270,12 @@
     <div id="ppg_pies" class="panel" style="display:none;">
       <div class="card">
         <h2>PPG Hallux Izquierdo</h2>
+        <button class="camera-btn" onclick="downloadImage('ppg3')" title="Descargar Gráfica">📷</button>
         <div class="chart-container-large"><canvas id="ppg3"></canvas></div>
       </div>
       <div class="card">
         <h2>PPG Hallux Derecho</h2>
+        <button class="camera-btn" onclick="downloadImage('ppg4')" title="Descargar Gráfica">📷</button>
         <div class="chart-container-large"><canvas id="ppg4"></canvas></div>
       </div>
     </div>
@@ -249,6 +284,7 @@
     <div id="comp_manos" class="panel" style="display:none;">
       <div class="card">
         <h2>Comparativa: Manos (Izq vs Der)</h2>
+        <button class="camera-btn" onclick="downloadImage('compareManos')" title="Descargar Gráfica">📷</button>
         <div class="chart-container-large"><canvas id="compareManos"></canvas></div>
       </div>
     </div>
@@ -257,28 +293,64 @@
     <div id="comp_pies" class="panel" style="display:none;">
       <div class="card">
         <h2>Comparativa: Pies (Izq vs Der)</h2>
+        <button class="camera-btn" onclick="downloadImage('comparePies')" title="Descargar Gráfica">📷</button>
         <div class="chart-container-large"><canvas id="comparePies"></canvas></div>
       </div>
     </div>
 
-    <!-- Panel TODOS (Estándar, muchas gráficas) -->
+    <!-- Panel TODOS (Estándar) -->
     <div id="all_view" class="panel" style="display:none;">
       <h2 style="margin-bottom:20px;"> Vista de Todas las Señales</h2>
-      <!-- Mantenemos chart-container normal -->
-      <div class="card"><h2>ECG</h2><div class="chart-container"><canvas id="all_c1"></canvas></div></div>
-      <div class="card"><h2>PPG Índice Izq</h2><div class="chart-container"><canvas id="all_c2"></canvas></div></div>
-      <div class="card"><h2>PPG Índice Der</h2><div class="chart-container"><canvas id="all_c3"></canvas></div></div>
-      <div class="card"><h2>PPG Hallux Izq</h2><div class="chart-container"><canvas id="all_c4"></canvas></div></div>
-      <div class="card"><h2>PPG Hallux Der</h2><div class="chart-container"><canvas id="all_c5"></canvas></div></div>
+      <div class="card">
+        <h2>ECG</h2>
+        <button class="camera-btn" onclick="downloadImage('all_c1')" title="Descargar Gráfica">📷</button>
+        <div class="chart-container"><canvas id="all_c1"></canvas></div>
+      </div>
+      <div class="card">
+        <h2>PPG Índice Izq</h2>
+        <button class="camera-btn" onclick="downloadImage('all_c2')" title="Descargar Gráfica">📷</button>
+        <div class="chart-container"><canvas id="all_c2"></canvas></div>
+      </div>
+      <div class="card">
+        <h2>PPG Índice Der</h2>
+        <button class="camera-btn" onclick="downloadImage('all_c3')" title="Descargar Gráfica">📷</button>
+        <div class="chart-container"><canvas id="all_c3"></canvas></div>
+      </div>
+      <div class="card">
+        <h2>PPG Hallux Izq</h2>
+        <button class="camera-btn" onclick="downloadImage('all_c4')" title="Descargar Gráfica">📷</button>
+        <div class="chart-container"><canvas id="all_c4"></canvas></div>
+      </div>
+      <div class="card">
+        <h2>PPG Hallux Der</h2>
+        <button class="camera-btn" onclick="downloadImage('all_c5')" title="Descargar Gráfica">📷</button>
+        <div class="chart-container"><canvas id="all_c5"></canvas></div>
+      </div>
     </div>
 
-    <!-- Panel SOLO PPG (Estándar, muchas gráficas) -->
+    <!-- Panel SOLO PPG (Estándar) -->
     <div id="ppg_view" class="panel" style="display:none;">
       <h2 style="margin-bottom:20px;">Vista de Todos los PPG </h2>
-      <div class="card"><h2>PPG Índice Izq</h2><div class="chart-container"><canvas id="ppg_only_c2"></canvas></div></div>
-      <div class="card"><h2>PPG Índice Der</h2><div class="chart-container"><canvas id="ppg_only_c3"></canvas></div></div>
-      <div class="card"><h2>PPG Hallux Izq</h2><div class="chart-container"><canvas id="ppg_only_c4"></canvas></div></div>
-      <div class="card"><h2>PPG Hallux Der</h2><div class="chart-container"><canvas id="ppg_only_c5"></canvas></div></div>
+      <div class="card">
+        <h2>PPG Índice Izq</h2>
+        <button class="camera-btn" onclick="downloadImage('ppg_only_c2')" title="Descargar Gráfica">📷</button>
+        <div class="chart-container"><canvas id="ppg_only_c2"></canvas></div>
+      </div>
+      <div class="card">
+        <h2>PPG Índice Der</h2>
+        <button class="camera-btn" onclick="downloadImage('ppg_only_c3')" title="Descargar Gráfica">📷</button>
+        <div class="chart-container"><canvas id="ppg_only_c3"></canvas></div>
+      </div>
+      <div class="card">
+        <h2>PPG Hallux Izq</h2>
+        <button class="camera-btn" onclick="downloadImage('ppg_only_c4')" title="Descargar Gráfica">📷</button>
+        <div class="chart-container"><canvas id="ppg_only_c4"></canvas></div>
+      </div>
+      <div class="card">
+        <h2>PPG Hallux Der</h2>
+        <button class="camera-btn" onclick="downloadImage('ppg_only_c5')" title="Descargar Gráfica">📷</button>
+        <div class="chart-container"><canvas id="ppg_only_c5"></canvas></div>
+      </div>
     </div>
 
   </div>
@@ -287,11 +359,26 @@
 <script>
 // --- Configuración Global ---
 const FIREBASE_URL = 'https://practicumii-a9956-default-rtdb.firebaseio.com/ad7606.json';
-const SAMPLE_RATE = 200;  // Frecuencia de muestreo (Hz)
-const SECONDS_TO_SHOW = 15; // Segundos deseados
-const BUFFER_SIZE = SAMPLE_RATE * SECONDS_TO_SHOW; // 3000 muestras
+const SAMPLE_RATE = 200;  
+const SECONDS_TO_SHOW = 15; 
+const BUFFER_SIZE = SAMPLE_RATE * SECONDS_TO_SHOW; 
 
-let charts = {}; // Para almacenar instancias y destruirlas al recargar
+let charts = {}; 
+let globalData = {}; // Almacenamiento para CSV
+
+// --- PLUGIN: Fondo BLANCO en la descarga ---
+const backgroundPlugin = {
+  id: 'customCanvasBackgroundColor',
+  beforeDraw: (chart, args, options) => {
+    const {ctx} = chart;
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-over';
+    ctx.fillStyle = '#ffffff'; 
+    ctx.fillRect(0, 0, chart.width, chart.height);
+    ctx.restore();
+  }
+};
+Chart.register(backgroundPlugin);
 
 // --- Funciones UI ---
 function toggleMenu() {
@@ -299,21 +386,80 @@ function toggleMenu() {
 }
 
 function showPanel(id, btn) {
-  // Ocultar todos los paneles
   document.querySelectorAll('.panel').forEach(p => p.style.display = 'none');
-  // Mostrar el seleccionado
   document.getElementById(id).style.display = 'block';
   
-  // Manejo de botones activos
   if (btn) {
     document.querySelectorAll('.menu button').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
   }
 
-  // En móvil, cerrar menú al seleccionar
   if (window.innerWidth <= 768) {
     document.getElementById('sidebar').classList.remove('open');
   }
+}
+
+// --- Función para Descargar IMAGEN de la Gráfica ---
+function downloadImage(chartId) {
+  const canvas = document.getElementById(chartId);
+  const link = document.createElement('a');
+  
+  // Mapa de nombres en español para los archivos descargados
+  const nombresArchivos = {
+    'ecgChart': 'senal_ecg',
+    'ppg1': 'ppg_indice_izquierdo',
+    'ppg2': 'ppg_indice_derecho',
+    'ppg3': 'ppg_hallux_izquierdo',
+    'ppg4': 'ppg_hallux_derecho',
+    'compareManos': 'comparacion_manos',
+    'comparePies': 'comparacion_pies',
+    'all_c1': 'ecg_general',
+    'all_c2': 'ppg_indice_izq_general',
+    'all_c3': 'ppg_indice_der_general',
+    'all_c4': 'ppg_hallux_izq_general',
+    'all_c5': 'ppg_hallux_der_general',
+    'ppg_only_c2': 'ppg_indice_izq_vista_ppg',
+    'ppg_only_c3': 'ppg_indice_der_vista_ppg',
+    'ppg_only_c4': 'ppg_hallux_izq_vista_ppg',
+    'ppg_only_c5': 'ppg_hallux_der_vista_ppg'
+  };
+
+  // Usar el nombre del mapa o 'grafica' por defecto
+  const nombreFinal = nombresArchivos[chartId] || 'grafica';
+  link.download = `${nombreFinal}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+// --- Función para Descargar CSV ---
+function downloadCSV() {
+    if (!globalData.CH1) { alert("Espera a que carguen los datos para descargar."); return; }
+    
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "Tiempo(s),ECG,PPG_Ind_Izq,PPG_Ind_Der,PPG_Pie_Izq,PPG_Pie_Der\n";
+
+    const len = globalData.CH1.length;
+    for(let i = 0; i < len; i++) {
+        const t = (i / SAMPLE_RATE).toFixed(3);
+        const row = [
+            t, 
+            globalData.CH1[i],
+            globalData.CH2[i],
+            globalData.CH3[i],
+            globalData.CH4[i],
+            globalData.CH5[i]
+        ].join(",");
+        csvContent += row + "\r\n";
+    }
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    // Nombre en español para el CSV
+    link.setAttribute("download", "biosenales_" + new Date().getTime() + ".csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 
 // --- Lógica de Datos y Gráficas ---
@@ -324,25 +470,27 @@ async function loadData() {
 
     if (!data) return;
 
-    // Procesar datos: Tomar solo las últimas BUFFER_SIZE muestras
+    // Procesar datos
     const ecg = sliceData(data.CH1);
     const ppgIzqMano = sliceData(data.CH2);
     const ppgDerMano = sliceData(data.CH3);
     const ppgIzqPie = sliceData(data.CH4);
     const ppgDerPie = sliceData(data.CH5);
 
-    // Eje X: Tiempo (s) = Índice / Tasa de Muestreo
-    // Si tenemos 3000 muestras a 200Hz, esto irá de 0 a 15 segundos.
+    // Guardar para CSV
+    globalData = { CH1: ecg, CH2: ppgIzqMano, CH3: ppgDerMano, CH4: ppgIzqPie, CH5: ppgDerPie };
+
+    // Eje X
     const labels = Array.from({length: ecg.length}, (_, i) => (i / SAMPLE_RATE));
 
-    // 1. Gráficas Individuales (Paneles originales) - ROJAS
+    // 1. Gráficas Individuales
     renderChart('ecgChart', labels, [{ label: 'ECG', data: ecg, color: 'red' }]);
     renderChart('ppg1', labels, [{ label: 'Índice Izq', data: ppgIzqMano, color: 'red' }]);
     renderChart('ppg2', labels, [{ label: 'Índice Der', data: ppgDerMano, color: 'red' }]);
     renderChart('ppg3', labels, [{ label: 'Hallux Izq', data: ppgIzqPie, color: 'red' }]);
     renderChart('ppg4', labels, [{ label: 'Hallux Der', data: ppgDerPie, color: 'red' }]);
 
-    // 2. Comparaciones (AZUL y VERDE)
+    // 2. Comparaciones
     renderChart('compareManos', labels, [
       { label: 'Índice Izq', data: ppgIzqMano, color: 'blue' },
       { label: 'Índice Der', data: ppgDerMano, color: 'green' }
@@ -353,14 +501,14 @@ async function loadData() {
       { label: 'Hallux Der', data: ppgDerPie, color: 'green' }
     ]);
 
-    // 3. Nueva Pestaña "ECG y PPG" (Todos los canales) - ROJAS
+    // 3. Vistas Grupales
     renderChart('all_c1', labels, [{ label: 'ECG', data: ecg, color: 'red' }]);
     renderChart('all_c2', labels, [{ label: 'Índice Izq', data: ppgIzqMano, color: 'red' }]);
     renderChart('all_c3', labels, [{ label: 'Índice Der', data: ppgDerMano, color: 'red' }]);
     renderChart('all_c4', labels, [{ label: 'Hallux Izq', data: ppgIzqPie, color: 'red' }]);
     renderChart('all_c5', labels, [{ label: 'Hallux Der', data: ppgDerPie, color: 'red' }]);
 
-    // 4. Nueva Pestaña "PPG" (Solo los 4 PPG) - ROJAS
+    // 4. Solo PPG
     renderChart('ppg_only_c2', labels, [{ label: 'Índice Izq', data: ppgIzqMano, color: 'red' }]);
     renderChart('ppg_only_c3', labels, [{ label: 'Índice Der', data: ppgDerMano, color: 'red' }]);
     renderChart('ppg_only_c4', labels, [{ label: 'Hallux Izq', data: ppgIzqPie, color: 'red' }]);
@@ -371,22 +519,18 @@ async function loadData() {
   }
 }
 
-// Función auxiliar para recortar array
 function sliceData(arr) {
   if (!arr) return [];
   return arr.slice(-BUFFER_SIZE);
 }
 
-// Función genérica de Chart.js
 function renderChart(canvasId, labels, datasets) {
   const ctx = document.getElementById(canvasId).getContext('2d');
 
-  // Si ya existe una gráfica en este canvas, destruirla
   if (charts[canvasId]) {
     charts[canvasId].destroy();
   }
 
-  // Preparar datasets
   const chartDatasets = datasets.map(ds => ({
     label: ds.label,
     data: ds.data,
@@ -413,17 +557,18 @@ function renderChart(canvasId, labels, datasets) {
         intersect: false,
       },
       plugins: {
-        legend: { display: true }
+        legend: { display: true },
+        // Activamos fondo blanco personalizado para descarga
+        customCanvasBackgroundColor: {
+          color: '#ffffff',
+        }
       },
       scales: {
         x: {
           display: true,
-          type: 'linear', // Usar escala lineal para mejor manejo numérico
-          title: { display: true, text: 'Tiempo (s)' }, // Eje X actualizado
-          ticks: { 
-            maxTicksLimit: 15, // Aumentado ligeramente para 15s
-            stepSize: 1 
-          }
+          type: 'linear', 
+          title: { display: true, text: 'Tiempo (s)' },
+          ticks: { maxTicksLimit: 15, stepSize: 1 }
         },
         y: {
           display: true,
@@ -439,7 +584,6 @@ function renderChart(canvasId, labels, datasets) {
   });
 }
 
-// Iniciar carga
 loadData();
 
 </script>
