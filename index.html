@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Visor Clínico ECG / PPG</title>
+<title>Vessel View ECG / PPG</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
   /* --- Diseño Clínico Profesional (Light Mode) --- */
@@ -18,7 +18,7 @@
     --text-secondary: #64748b;/* Gris medio para etiquetas */
     --text-muted: #94a3b8;    /* Gris claro para detalles sutiles */
     
-    --accent-color: #059669;  /* Verde esmeralda profesional */
+    --accent-color: #5ae8bb;  /* Verde esmeralda  */
     --accent-dim: rgba(5, 150, 105, 0.1);
     
     --border-color: #e2e8f0;  /* Bordes suaves */
@@ -713,7 +713,7 @@ async function loadData() {
 
     const labels = Array.from({length: ecg.length}, (_, i) => (i / SAMPLE_RATE));
 
-    const colRed = '#ef4444'; // Rojo clínico brillante
+    const colRed = '#5ae8bb'; // Rojo clínico brillante
     const colBlue = '#3b82f6'; // Azul clínico brillante
     const colGreen = '#10b981'; // Verde clínico brillante
     const draw = (id, lbls, datasets) => renderChart(id, lbls, datasets);
