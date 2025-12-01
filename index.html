@@ -713,11 +713,12 @@ async function loadData() {
 
     const labels = Array.from({length: ecg.length}, (_, i) => (i / SAMPLE_RATE));
 
-    const colECG =  '#0059c2' ; // AQUI VAN LOS COLORES CUANDO SOPHIA SE DECIDA!!!!!!!!!!
-    const colPPG1 = '#80dbe4'; // 
-    const colPPG3 = '#e1464d'; // 
-    const colPPG2 = '#dd88df'; // 
-    const colPPG4 = '#8384e1'; // 
+    const colECG  = '#001A3E'; // Azul marino profundo (color base del RB19)
+const colPPG1 = '#F1C40F'; // Amarillo brillante estilo Red Bull (contraste fuerte)
+const colPPG2 = '#D41414'; // Rojo intenso RB (opuesto al amarillo)
+const colPPG3 = '#75A7FF'; // Azul claro saturado (contraste fuerte contra colPPG4)
+const colPPG4 = '#FF7F4D'; // Naranja rojizo RB moderno (muy distinto al azul claro)
+
 
     
     const colGreen = '#10b981'; // Verde clínico brillante
