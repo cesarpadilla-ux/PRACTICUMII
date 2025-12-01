@@ -18,7 +18,7 @@
     --text-secondary: #64748b;/* Gris medio para etiquetas */
     --text-muted: #94a3b8;    /* Gris claro para detalles sutiles */
     
-    --accent-color: #5ae8bb;  /* Verde esmeralda  */
+    --accent-color: #059669 ;  /* Verde esmeralda  */
     --accent-dim: rgba(5, 150, 105, 0.1);
     
     --border-color: #e2e8f0;  /* Bordes suaves */
@@ -343,7 +343,7 @@
 <header>
   <div class="brand-area">
     <button class="menu-toggle" onclick="toggleMenu()">☰</button>
-    <div class="brand">Visor<span>CLÍNICO</span></div>
+    <div class="brand">Vessel <span>View</span></div>
     <div class="live-clock" id="headerClock">--:--:--</div>
   </div>
   
@@ -713,36 +713,41 @@ async function loadData() {
 
     const labels = Array.from({length: ecg.length}, (_, i) => (i / SAMPLE_RATE));
 
-    const colRed = '#5ae8bb'; // Rojo clínico brillante
-    const colBlue = '#3b82f6'; // Azul clínico brillante
+    const colECG =  '#059669' ; // AQUI VAN LOS COLORES CUANDO SOPHIA SE DECIDA!!!!!!!!!!
+    const colPPG1 = '#1d998a'; // 
+    const colPPG2 = '#5fbf90'; // 
+    const colPPG3 = '#36bdbd'; // 
+    const colPPG4 = '#5395a2'; // 
+
+    
     const colGreen = '#10b981'; // Verde clínico brillante
     const draw = (id, lbls, datasets) => renderChart(id, lbls, datasets);
 
-    draw('ecgChart', labels, [{ label: 'ECG', data: ecg, color: colRed }]);
-    draw('ppg1', labels, [{ label: 'Índice Izq', data: ppgIzqMano, color: colRed }]);
-    draw('ppg2', labels, [{ label: 'Índice Der', data: ppgDerMano, color: colRed }]);
-    draw('ppg3', labels, [{ label: 'Hallux Izq', data: ppgIzqPie, color: colRed }]);
-    draw('ppg4', labels, [{ label: 'Hallux Der', data: ppgDerPie, color: colRed }]);
+    draw('ecgChart', labels, [{ label: 'ECG', data: ecg, color: colECG }]);
+    draw('ppg1', labels, [{ label: 'Índice Izq', data: ppgIzqMano, color: colPPG1 }]);
+    draw('ppg2', labels, [{ label: 'Índice Der', data: ppgDerMano, color: colPPG2 }]);
+    draw('ppg3', labels, [{ label: 'Hallux Izq', data: ppgIzqPie, color: colPPG3 }]);
+    draw('ppg4', labels, [{ label: 'Hallux Der', data: ppgDerPie, color: colPPG4 }]);
 
     draw('compareManos', labels, [
-      { label: 'Índice Izq', data: ppgIzqMano, color: colBlue },
-      { label: 'Índice Der', data: ppgDerMano, color: colGreen }
+      { label: 'Índice Izq', data: ppgIzqMano, color: colPPG1 },
+      { label: 'Índice Der', data: ppgDerMano, color: colPPG2 }
     ]);
     draw('comparePies', labels, [
-      { label: 'Hallux Izq', data: ppgIzqPie, color: colBlue },
-      { label: 'Hallux Der', data: ppgDerPie, color: colGreen }
+      { label: 'Hallux Izq', data: ppgIzqPie, color: colPPG3 },
+      { label: 'Hallux Der', data: ppgDerPie, color: colPPG4 }
     ]);
 
-    draw('all_c1', labels, [{ label: 'ECG', data: ecg, color: colRed }]);
-    draw('all_c2', labels, [{ label: 'Índice Izq', data: ppgIzqMano, color: colRed }]);
-    draw('all_c3', labels, [{ label: 'Índice Der', data: ppgDerMano, color: colRed }]);
-    draw('all_c4', labels, [{ label: 'Hallux Izq', data: ppgIzqPie, color: colRed }]);
-    draw('all_c5', labels, [{ label: 'Hallux Der', data: ppgDerPie, color: colRed }]);
+    draw('all_c1', labels, [{ label: 'ECG', data: ecg, color: colECG }]);
+    draw('all_c2', labels, [{ label: 'Índice Izq', data: ppgIzqMano, color: colPPG1 }]);
+    draw('all_c3', labels, [{ label: 'Índice Der', data: ppgDerMano, color: colPPG2 }]);
+    draw('all_c4', labels, [{ label: 'Hallux Izq', data: ppgIzqPie, color: colPPG3 }]);
+    draw('all_c5', labels, [{ label: 'Hallux Der', data: ppgDerPie, color: colPPG4 }]);
 
-    draw('ppg_only_c2', labels, [{ label: 'Índice Izq', data: ppgIzqMano, color: colRed }]);
-    draw('ppg_only_c3', labels, [{ label: 'Índice Der', data: ppgDerMano, color: colRed }]);
-    draw('ppg_only_c4', labels, [{ label: 'Hallux Izq', data: ppgIzqPie, color: colRed }]);
-    draw('ppg_only_c5', labels, [{ label: 'Hallux Der', data: ppgDerPie, color: colRed }]);
+    draw('ppg_only_c2', labels, [{ label: 'Índice Izq', data: ppgIzqMano, color: colPPG1 }]);
+    draw('ppg_only_c3', labels, [{ label: 'Índice Der', data: ppgDerMano, color: colPPG2 }]);
+    draw('ppg_only_c4', labels, [{ label: 'Hallux Izq', data: ppgIzqPie, color: colPPG3 }]);
+    draw('ppg_only_c5', labels, [{ label: 'Hallux Der', data: ppgDerPie, color: colPPG4 }]);
 
   } catch (error) { console.error("Error:", error); }
 }
